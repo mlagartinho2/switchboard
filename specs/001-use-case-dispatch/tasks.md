@@ -113,7 +113,7 @@ story needs. Signatures come from [contracts/java-api.md](contracts/java-api.md)
 
 ### Tests (write first, confirm they fail)
 
-- [ ] T006 [P] Write `AT/SwitchboardGroupTest.java` for `SwitchboardGroup.of(name, requestType,
+- [X] T006 [P] Write `AT/SwitchboardGroupTest.java` for `SwitchboardGroup.of(name, requestType,
   responseType)`:
   - A name that does not match `[a-z0-9]+(-[a-z0-9]+)*`, such as `"Refunds"`, `"refunds_x"`,
     `""`, or `"-a"`, throws `IllegalArgumentException` naming the bad value (rule V9).
@@ -122,12 +122,12 @@ story needs. Signatures come from [contracts/java-api.md](contracts/java-api.md)
   - `equals` and `hashCode` cover the name and both types. Two handles with the same name and
     different types are **not** equal.
   - `toString()` returns the name.
-- [ ] T007 [P] Write `AT/SwitchboardDispatchExceptionTest.java`:
+- [X] T007 [P] Write `AT/SwitchboardDispatchExceptionTest.java`:
   - `SwitchboardUnresolvedException("refunds").group()` returns `"refunds"`.
   - `SwitchboardNotAvailableException("refunds","X")` exposes `group()` and `caseKey()`.
   - Both messages name the group (and the key, where there is one).
   - Both are subtypes of the sealed `SwitchboardDispatchException`, and of `RuntimeException`.
-- [ ] T008 [P] Write `AT/autoconfigure/SwitchboardPropertiesBindingTest.java` using
+- [X] T008 [P] Write `AT/autoconfigure/SwitchboardPropertiesBindingTest.java` using
   `ApplicationContextRunner` with `@EnableConfigurationProperties(SwitchboardProperties.class)`.
   It asserts that:
   - `switchboard.enabled` defaults to `true`.
@@ -141,22 +141,22 @@ story needs. Signatures come from [contracts/java-api.md](contracts/java-api.md)
 
 ### Implementation
 
-- [ ] T009 [P] Implement `AC/SwitchboardGroup.java`: a final class with private constructor, the
+- [X] T009 [P] Implement `AC/SwitchboardGroup.java`: a final class with private constructor, the
   static factory `of`, validation exactly as in T006, accessors `name()`, `requestType()`,
   `responseType()`, and `equals`/`hashCode`/`toString`. Make T006 pass.
-- [ ] T010 [P] Create the interface `AC/SwitchboardStrategy.java` with methods
+- [X] T010 [P] Create the interface `AC/SwitchboardStrategy.java` with methods
   `SwitchboardGroup<Req, Res> group()`, `String caseKey()`, and
   `Res execute(Req request, SwitchboardContext context)`. Javadoc must state that the key must
   match `[A-Za-z0-9_-]+` and be unique within the group.
-- [ ] T011 [P] Create the interface `AC/SwitchboardResolver.java` with methods
+- [X] T011 [P] Create the interface `AC/SwitchboardResolver.java` with methods
   `SwitchboardGroup<Req, ?> group()`, `String name()`, and
   `Optional<String> resolve(jakarta.servlet.http.HttpServletRequest httpRequest, Req payload)`.
   Javadoc must state that an empty or blank result means "no key, try the next resolver", that
   exceptions propagate unchanged, and that a resolver belongs to exactly one group.
-- [ ] T012 [P] Create the records `AC/SwitchboardContext.java` (`group`, `caseKey`,
+- [X] T012 [P] Create the records `AC/SwitchboardContext.java` (`group`, `caseKey`,
   `resolverName`) and `AC/SwitchboardResolution.java` (`caseKey`, `resolverName`). Both compact
   constructors call `requireNonNull` on every component.
-- [ ] T013 [P] Implement the exceptions so that T007 passes:
+- [X] T013 [P] Implement the exceptions so that T007 passes:
   - `AC/SwitchboardDispatchException.java`: `public abstract sealed class ... extends
     RuntimeException permits SwitchboardUnresolvedException, SwitchboardNotAvailableException`,
     with field `group`.
@@ -164,7 +164,7 @@ story needs. Signatures come from [contracts/java-api.md](contracts/java-api.md)
     identified a use case for this request."`
   - `AC/SwitchboardNotAvailableException.java` (final), with `caseKey()`. Message: `"Use case
     '<k>' in group '<g>' is not registered or is disabled."`
-- [ ] T014 [P] Implement `AC/autoconfigure/SwitchboardProperties.java`:
+- [X] T014 [P] Implement `AC/autoconfigure/SwitchboardProperties.java`:
   - `@ConfigurationProperties("switchboard")` record with `@DefaultValue("true") boolean
     enabled` and `Map<String, GroupSettings> groups`.
   - Nested record `GroupSettings(List<String> resolutionOrder, Map<String, CaseSettings> cases)`.
