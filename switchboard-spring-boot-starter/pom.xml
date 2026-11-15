@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.llizzard</groupId>
+        <artifactId>switchboard-parent</artifactId>
+        <version>2.0.0</version>
+    </parent>
+
+    <artifactId>switchboard-spring-boot-starter</artifactId>
+    <name>Switchboard Spring Boot Starter</name>
+    <description>
+        Starter for the Switchboard use-case dispatch library. Contains no code; it brings in the
+        autoconfigure module and Spring Boot's WebMVC starter.
+    </description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.llizzard</groupId>
+            <artifactId>switchboard-autoconfigure</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
+        </dependency>
+    </dependencies>
+</project>
