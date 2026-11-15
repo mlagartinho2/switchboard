@@ -8,3 +8,7 @@ dependency-reduced-pom.xml
 .vscode/
 !*.code-workspace
 .DS_Store
+
+# Java / misc
+*.class
+*.log

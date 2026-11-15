@@ -59,7 +59,7 @@ and demonstrated on its own.
 **Purpose**: Maven multi-module skeleton per [plan.md](plan.md) and [research.md](research.md)
 §R1 and §R13.
 
-- [ ] T001 Create the root `pom.xml` (`switchboard-parent`):
+- [X] T001 Create the root `pom.xml` (`switchboard-parent`):
   - Coordinates: `groupId com.llizzard`, `artifactId switchboard-parent`, `version 2.0.0`,
     `packaging pom`.
   - Modules: `switchboard-autoconfigure`, `switchboard-spring-boot-starter`,
@@ -72,7 +72,7 @@ and demonstrated on its own.
   - Add `distributionManagement` repository `internal-releases`, with its URL taken from property
     `switchboard.nexus.url`. Leave a `TODO(NEXUS_URL)` comment, because the real URL is not yet
     known (§R13).
-- [ ] T002 [P] Create `switchboard-autoconfigure/pom.xml`:
+- [X] T002 [P] Create `switchboard-autoconfigure/pom.xml`:
   - Parent: `switchboard-parent`.
   - Dependencies:
     - `spring-boot-autoconfigure`
@@ -84,17 +84,17 @@ and demonstrated on its own.
   - Test dependencies: `spring-boot-starter-test` and the Boot 4 WebMVC test starter.
   - Confirm the exact Boot 4 module artifact IDs against the pinned BOM (§R1, "verify at
     implementation").
-- [ ] T003 [P] Create `switchboard-spring-boot-starter/pom.xml`:
+- [X] T003 [P] Create `switchboard-spring-boot-starter/pom.xml`:
   - Parent: `switchboard-parent`.
   - Dependencies, with no `src/` directory: `com.llizzard:switchboard-autoconfigure:${project.version}`
     and `org.springframework.boot:spring-boot-starter-webmvc`.
-- [ ] T004 [P] Create `switchboard-sample/pom.xml`:
+- [X] T004 [P] Create `switchboard-sample/pom.xml`:
   - Parent: `switchboard-parent`.
   - Dependencies: `switchboard-spring-boot-starter`, `spring-boot-starter-actuator`, and
     `spring-boot-starter-test` (test scope).
   - Add `spring-boot-maven-plugin`.
   - Set property `maven.deploy.skip=true` so the sample is never published (Principle I).
-- [ ] T005 Create the empty `AR/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`
+- [X] T005 Create the empty `AR/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`
   file and the package directories `AC/`, `AC/autoconfigure/`, `AC/web/`, `AC/actuate/`, `AT/`,
   `SM/`, and `ST/`. Run `mvn -q verify` from the repo root and confirm that all four modules
   build with zero tests.
