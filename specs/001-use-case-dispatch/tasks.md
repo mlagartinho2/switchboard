@@ -427,10 +427,10 @@ even when the consumer has its own catch-all exception handler (quickstart scena
 - [X] T035 [P] [US2] Write `AT/web/SwitchboardExceptionHandlerTest.java` (plain JUnit, calling
   the handler methods directly with a `MockHttpServletRequest` whose URI is `/api/refunds`). It
   asserts every field in [contracts/http-errors.md](contracts/http-errors.md):
-  - **Unresolved**: status 501; `type` = `urn:switchboard:error:use-case-unresolved`; `title`
+  - **Unresolved**: status 501; `type` = `tag:llizzard.com,2026:switchboard:use-case-unresolved`; `title`
     "Use case not resolved"; `instance` `/api/refunds`; property `errorCode` =
     `USE_CASE_UNRESOLVED`; property `group` = `refunds`; no `key` property.
-  - **Not available**: status 404; `type` = `urn:switchboard:error:use-case-not-available`;
+  - **Not available**: status 404; `type` = `tag:llizzard.com,2026:switchboard:use-case-not-available`;
     `title` "Use case not available"; `errorCode` = `USE_CASE_NOT_AVAILABLE`; `group` and `key`
     properties set.
   - Neither `detail` contains payload data.

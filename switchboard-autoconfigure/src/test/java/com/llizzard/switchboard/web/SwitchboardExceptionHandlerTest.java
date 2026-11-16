@@ -30,7 +30,7 @@ class SwitchboardExceptionHandlerTest {
         ProblemDetail problem = response.getBody();
         assertThat(problem).isNotNull();
         assertThat(problem.getStatus()).isEqualTo(501);
-        assertThat(problem.getType()).isEqualTo(URI.create("urn:switchboard:error:use-case-unresolved"));
+        assertThat(problem.getType()).isEqualTo(URI.create("tag:llizzard.com,2026:switchboard:use-case-unresolved"));
         assertThat(problem.getTitle()).isEqualTo("Use case not resolved");
         assertThat(problem.getDetail())
                 .isEqualTo("No resolver in group 'refunds' identified a use case for this request.");
@@ -50,7 +50,7 @@ class SwitchboardExceptionHandlerTest {
         ProblemDetail problem = response.getBody();
         assertThat(problem).isNotNull();
         assertThat(problem.getStatus()).isEqualTo(404);
-        assertThat(problem.getType()).isEqualTo(URI.create("urn:switchboard:error:use-case-not-available"));
+        assertThat(problem.getType()).isEqualTo(URI.create("tag:llizzard.com,2026:switchboard:use-case-not-available"));
         assertThat(problem.getTitle()).isEqualTo("Use case not available");
         assertThat(problem.getDetail())
                 .isEqualTo("Use case 'EXPEDITED' in group 'refunds' is not registered or is disabled.");
@@ -66,9 +66,9 @@ class SwitchboardExceptionHandlerTest {
         assertThat(SwitchboardExceptionHandler.ERROR_CODE_UNRESOLVED).isEqualTo("USE_CASE_UNRESOLVED");
         assertThat(SwitchboardExceptionHandler.ERROR_CODE_NOT_AVAILABLE).isEqualTo("USE_CASE_NOT_AVAILABLE");
         assertThat(SwitchboardExceptionHandler.TYPE_UNRESOLVED)
-                .isEqualTo(URI.create("urn:switchboard:error:use-case-unresolved"));
+                .isEqualTo(URI.create("tag:llizzard.com,2026:switchboard:use-case-unresolved"));
         assertThat(SwitchboardExceptionHandler.TYPE_NOT_AVAILABLE)
-                .isEqualTo(URI.create("urn:switchboard:error:use-case-not-available"));
+                .isEqualTo(URI.create("tag:llizzard.com,2026:switchboard:use-case-not-available"));
     }
 
     @Test
@@ -85,6 +85,50 @@ class SwitchboardExceptionHandlerTest {
         assertThat(notAvailable.getDetail()).doesNotContain(PAYLOAD_MARKER);
         assertThat(unresolved.getProperties().values()).doesNotContain(PAYLOAD_MARKER);
         assertThat(notAvailable.getProperties().values()).doesNotContain(PAYLOAD_MARKER);
+    }
+
+    @Test
+    void keyAtTheLengthLimitIsEchoed() {
+        String key = "K".repeat(64);
+
+        ProblemDetail problem = handler
+                .handleNotAvailable(new SwitchboardNotAvailableException("refunds", key), request).getBody();
+
+        assertThat(problem.getProperties()).containsEntry("key", key);
+        assertThat(problem.getDetail()).contains("'" + key + "'");
+    }
+
+    @Test
+    void keyOverTheLengthLimitIsNotEchoed() {
+        String key = "K".repeat(65);
+
+        ProblemDetail problem = handler
+                .handleNotAvailable(new SwitchboardNotAvailableException("refunds", key), request).getBody();
+
+        assertNotEchoed(problem, key);
+    }
+
+    @Test
+    void keyOutsideTheKeyFormatIsNotEchoed() {
+        for (String key : new String[] { "<script>alert(1)</script>", "has space", "dot.ted", "ünïcode", "" }) {
+            ProblemDetail problem = handler
+                    .handleNotAvailable(new SwitchboardNotAvailableException("refunds", key), request).getBody();
+
+            assertNotEchoed(problem, key);
+        }
+    }
+
+    private static void assertNotEchoed(ProblemDetail problem, String key) {
+        assertThat(problem.getStatus()).isEqualTo(404);
+        assertThat(problem.getProperties())
+                .containsEntry("errorCode", "USE_CASE_NOT_AVAILABLE")
+                .containsEntry("group", "refunds")
+                .doesNotContainKey("key");
+        assertThat(problem.getDetail())
+                .isEqualTo("The resolved use case in group 'refunds' is not registered or is disabled.");
+        if (!key.isEmpty()) {
+            assertThat(problem.getDetail()).doesNotContain(key);
+        }
     }
 
     @Test

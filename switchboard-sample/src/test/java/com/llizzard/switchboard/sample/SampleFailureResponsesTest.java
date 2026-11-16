@@ -52,7 +52,7 @@ class SampleFailureResponsesTest {
                 .bodyJson()
                 .hasPathSatisfying("$.errorCode", v -> v.assertThat().isEqualTo("USE_CASE_UNRESOLVED"))
                 .hasPathSatisfying("$.group", v -> v.assertThat().isEqualTo("refunds"))
-                .hasPathSatisfying("$.type", v -> v.assertThat().isEqualTo("urn:switchboard:error:use-case-unresolved"))
+                .hasPathSatisfying("$.type", v -> v.assertThat().isEqualTo("tag:llizzard.com,2026:switchboard:use-case-unresolved"))
                 .hasPathSatisfying("$.instance", v -> v.assertThat().isEqualTo("/api/refunds"))
                 .doesNotHavePath("$.key");
     }
@@ -66,7 +66,7 @@ class SampleFailureResponsesTest {
                 .hasPathSatisfying("$.group", v -> v.assertThat().isEqualTo("refunds"))
                 .hasPathSatisfying("$.key", v -> v.assertThat().isEqualTo(key))
                 .hasPathSatisfying("$.type",
-                        v -> v.assertThat().isEqualTo("urn:switchboard:error:use-case-not-available"));
+                        v -> v.assertThat().isEqualTo("tag:llizzard.com,2026:switchboard:use-case-not-available"));
     }
 
     @Test
@@ -77,6 +77,17 @@ class SampleFailureResponsesTest {
     @Test
     void unknownKeyReturns404() {
         assertNotAvailable(refund(mvc, "NOPE", "{\"amount\":50}"), "NOPE");
+    }
+
+    @Test
+    void keyOutsideTheKeyFormatReturns404WithoutEchoingIt() {
+        assertThat(refund(mvc, "<b>x</b>", "{\"amount\":50}"))
+                .hasStatus(HttpStatus.NOT_FOUND)
+                .hasContentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON)
+                .bodyJson()
+                .hasPathSatisfying("$.errorCode", v -> v.assertThat().isEqualTo("USE_CASE_NOT_AVAILABLE"))
+                .doesNotHavePath("$.key")
+                .hasPathSatisfying("$.detail", v -> v.assertThat().asString().doesNotContain("<b>"));
     }
 
     /**

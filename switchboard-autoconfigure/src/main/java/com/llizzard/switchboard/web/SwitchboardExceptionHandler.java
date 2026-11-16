@@ -2,6 +2,7 @@ package com.llizzard.switchboard.web;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.regex.Pattern;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -43,10 +44,16 @@ public class SwitchboardExceptionHandler {
     public static final String ERROR_CODE_NOT_AVAILABLE = "USE_CASE_NOT_AVAILABLE";
 
     /** Problem type for {@link #ERROR_CODE_UNRESOLVED}. */
-    public static final URI TYPE_UNRESOLVED = URI.create("urn:switchboard:error:use-case-unresolved");
+    public static final URI TYPE_UNRESOLVED = URI.create("tag:llizzard.com,2026:switchboard:use-case-unresolved");
 
     /** Problem type for {@link #ERROR_CODE_NOT_AVAILABLE}. */
-    public static final URI TYPE_NOT_AVAILABLE = URI.create("urn:switchboard:error:use-case-not-available");
+    public static final URI TYPE_NOT_AVAILABLE = URI.create("tag:llizzard.com,2026:switchboard:use-case-not-available");
+
+    /** Longest resolved key echoed back in {@code key} and {@code detail}. */
+    private static final int MAX_ECHOED_KEY_LENGTH = 64;
+
+    /** The use-case key format (rule V2); a key outside it can never match a strategy. */
+    private static final Pattern ECHOABLE_KEY = Pattern.compile("[A-Za-z0-9_-]+");
 
     /** Creates the handler; registered by Switchboard auto-configuration. */
     public SwitchboardExceptionHandler() {
@@ -63,12 +70,15 @@ public class SwitchboardExceptionHandler {
     public ResponseEntity<ProblemDetail> handleUnresolved(SwitchboardUnresolvedException ex,
             HttpServletRequest request) {
         ProblemDetail problem = problem(HttpStatus.NOT_IMPLEMENTED, TYPE_UNRESOLVED, "Use case not resolved",
-                ERROR_CODE_UNRESOLVED, ex, request);
+                ERROR_CODE_UNRESOLVED, ex.getMessage(), ex, request);
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(problem);
     }
 
     /**
      * Answers 404 when the resolved use case is not registered or is disabled.
+     *
+     * <p>The resolved key is echoed in {@code key} and {@code detail} only when it matches
+     * {@code [A-Za-z0-9_-]+} and is at most 64 characters long; otherwise both leave it out.
      *
      * @param ex the failure
      * @param request the current request, used for {@code instance}
@@ -77,16 +87,23 @@ public class SwitchboardExceptionHandler {
     @ExceptionHandler(SwitchboardNotAvailableException.class)
     public ResponseEntity<ProblemDetail> handleNotAvailable(SwitchboardNotAvailableException ex,
             HttpServletRequest request) {
+        // The key often comes straight from a client header: echo it only when it has the key format
+        // and a sane length, so arbitrary client input is never reflected back.
+        boolean echoKey = isEchoable(ex.caseKey());
+        String detail = echoKey ? ex.getMessage()
+                : "The resolved use case in group '" + ex.group() + "' is not registered or is disabled.";
         ProblemDetail problem = problem(HttpStatus.NOT_FOUND, TYPE_NOT_AVAILABLE, "Use case not available",
-                ERROR_CODE_NOT_AVAILABLE, ex, request);
-        problem.setProperty("key", ex.caseKey());
+                ERROR_CODE_NOT_AVAILABLE, detail, ex, request);
+        if (echoKey) {
+            problem.setProperty("key", ex.caseKey());
+        }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problem);
     }
 
     private static ProblemDetail problem(HttpStatus status, URI type, String title, String errorCode,
-            SwitchboardDispatchException ex, HttpServletRequest request) {
-        // The exception message names only the group (and key); it never contains payload data.
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, ex.getMessage());
+            String detail, SwitchboardDispatchException ex, HttpServletRequest request) {
+        // The detail names only the group (and key); it never contains payload data.
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, detail);
         problem.setType(type);
         problem.setTitle(title);
         URI instance = instance(request);
@@ -96,6 +113,10 @@ public class SwitchboardExceptionHandler {
         problem.setProperty("errorCode", errorCode);
         problem.setProperty("group", ex.group());
         return problem;
+    }
+
+    private static boolean isEchoable(String key) {
+        return key.length() <= MAX_ECHOED_KEY_LENGTH && ECHOABLE_KEY.matcher(key).matches();
     }
 
     private static URI instance(HttpServletRequest request) {

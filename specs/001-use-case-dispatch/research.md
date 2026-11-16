@@ -143,8 +143,8 @@ They do not affect the design.
   - It returns Spring's `ProblemDetail` (RFC 9457, `application/problem+json`), with extra
     properties `errorCode`, `group`, and (for 404) `key`.
   - Error codes: `USE_CASE_UNRESOLVED` (501) and `USE_CASE_NOT_AVAILABLE` (404).
-  - Type URIs: `urn:switchboard:error:use-case-unresolved` and
-    `urn:switchboard:error:use-case-not-available`.
+  - Type URIs: `tag:llizzard.com,2026:switchboard:use-case-unresolved` and
+    `tag:llizzard.com,2026:switchboard:use-case-not-available`.
   - `instance` is the request path.
   - The handler is `@ConditionalOnMissingBean(SwitchboardExceptionHandler.class)`.
 - **Rationale**:
@@ -152,7 +152,11 @@ They do not affect the design.
   - Advice beans are tried in order, so the highest precedence stops a consumer's catch-all
     `@ExceptionHandler(Exception.class)` from swallowing these two exceptions (FR-023). Because
     the handler covers only Switchboard exceptions, it cannot hijack anything else.
-  - URNs avoid publishing a documentation site just to host type URIs.
+  - `tag:` URIs (RFC 4151) are valid without registering anything or hosting a page, and never
+    break. An earlier draft used `urn:switchboard:...`, but URN namespaces must be registered
+    with IANA (RFC 8141), so those were not valid URNs. Changed in the pre-release contract review.
+  - The resolved key is echoed only when it has the key format and is at most 64 characters, so
+    arbitrary client input is never reflected back (pre-release contract review).
   - The error codes become a public contract once 2.0.0 ships, and must not change afterward.
 - **Alternatives considered**: The custom `ErrorResponse(code, message)` record from the earlier
   draft was superseded by the clarification. `about:blank` types were rejected because the type

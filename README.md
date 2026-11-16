@@ -195,7 +195,7 @@ over your own catch-all `@ExceptionHandler`.
 
 ```json
 {
-  "type": "urn:switchboard:error:use-case-not-available",
+  "type": "tag:llizzard.com,2026:switchboard:use-case-not-available",
   "title": "Use case not available",
   "status": 404,
   "detail": "Use case 'EXPEDITED' in group 'refunds' is not registered or is disabled.",
@@ -206,9 +206,18 @@ over your own catch-all `@ExceptionHandler`.
 }
 ```
 
-Responses never include payload data. Exceptions thrown by your own strategies and resolvers are
-not converted: they reach your normal error handling unchanged. The error codes and type URIs are
-a stable contract, documented in
+Responses never include payload data. The resolved key is echoed in `key` and `detail` only when
+it matches the key format and is at most 64 characters; otherwise both leave it out. Exceptions
+thrown by your own strategies and resolvers are not converted: they reach your normal error
+handling unchanged.
+
+What clients can rely on:
+- `type`, `errorCode`, `status`, `group`, and `key` are stable. Match on `type` or `errorCode`.
+- `title` and `detail` are text for people and may change in any release; don't parse them.
+- Later versions may add new error codes and new fields. Ignore fields you don't know, and treat
+  an unknown `errorCode` like any other error with that status.
+
+The full contract is in
 [contracts/http-errors.md](specs/001-use-case-dispatch/contracts/http-errors.md).
 
 ## Inspection endpoint
