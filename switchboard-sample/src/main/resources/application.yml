@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: switchboard-sample
+
+# Switchboard settings (resolution order, per-case kill switches, metadata) are added in US3.
+# Case keys must be bracketed to keep their case and underscores, e.g. "[EXPEDITED]".
+switchboard:
