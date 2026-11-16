@@ -633,17 +633,17 @@ the user's bean, and contains no second instance.
 
 ### Tests for User Story 5 (write first, confirm they fail where a gap exists)
 
-- [ ] T056 [P] [US5] Extend `AT/autoconfigure/SwitchboardAutoConfigurationTest.java` with one
+- [X] T056 [P] [US5] Extend `AT/autoconfigure/SwitchboardAutoConfigurationTest.java` with one
   override test per bean: `SwitchboardRegistry`, `SwitchboardResolverChain`,
   `SwitchboardDispatcher`, `SwitchboardStartupValidator`, and `SwitchboardExceptionHandler`.
   Each test registers a user subclass via `withBean(...)` and asserts
   `context.getBean(Type.class)` is that instance and `getBeansOfType(Type.class)` has size 1.
-- [ ] T057 [P] [US5] Extend `AT/actuate/SwitchboardEndpointAutoConfigurationTest.java` with an
+- [X] T057 [P] [US5] Extend `AT/actuate/SwitchboardEndpointAutoConfigurationTest.java` with an
   override test for `SwitchboardEndpoint`, written the same way as T056.
 
 ### Implementation for User Story 5
 
-- [ ] T058 [US5] Fix any failure from T056 or T057. Confirm that every `@Bean` method in
+- [X] T058 [US5] Fix any failure from T056 or T057. Confirm that every `@Bean` method in
   `AC/autoconfigure/SwitchboardAutoConfiguration.java` and
   `AC/autoconfigure/SwitchboardEndpointAutoConfiguration.java` carries
   `@ConditionalOnMissingBean`, and that each overridable class is public, non-final, and has a

@@ -5,6 +5,8 @@ import static com.llizzard.switchboard.Stubs.resolver;
 import static com.llizzard.switchboard.Stubs.strategy;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.actuate.autoconfigure.endpoint.EndpointAutoConfiguration;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
@@ -12,8 +14,6 @@ import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.convert.ApplicationConversionService;
 import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.support.ConfigurableConversionService;
 
 import com.llizzard.switchboard.Stubs.StubResolver;
@@ -84,29 +84,21 @@ class SwitchboardEndpointAutoConfigurationTest {
                 });
     }
 
+    // --- US5: the endpoint can be replaced by a consumer bean (FR-029, SC-007) ---
+
     @Test
-    void consumerEndpointBeanReplacesTheLibraryOne() {
+    void userEndpointReplacesTheLibraryOne() {
+        SwitchboardProperties noConfig = new SwitchboardProperties(true, null);
+        SwitchboardEndpoint userEndpoint = new SwitchboardEndpoint(new SwitchboardRegistry(List.of(), noConfig),
+                new SwitchboardResolverChain(List.of(), noConfig), noConfig) {
+        };
+
         runner.withPropertyValues(EXPOSE)
-                .withUserConfiguration(CustomEndpointConfiguration.class)
+                .withBean("userEndpoint", SwitchboardEndpoint.class, () -> userEndpoint)
                 .run(context -> {
-                    assertThat(context).hasSingleBean(SwitchboardEndpoint.class);
-                    assertThat(context.getBean(SwitchboardEndpoint.class)).isInstanceOf(CustomEndpoint.class);
+                    assertThat(context).hasNotFailed();
+                    assertThat(context.getBean(SwitchboardEndpoint.class)).isSameAs(userEndpoint);
+                    assertThat(context.getBeansOfType(SwitchboardEndpoint.class)).hasSize(1);
                 });
-    }
-
-    static class CustomEndpoint extends SwitchboardEndpoint {
-        CustomEndpoint(SwitchboardRegistry registry, SwitchboardResolverChain chain, SwitchboardProperties properties) {
-            super(registry, chain, properties);
-        }
-    }
-
-    @Configuration(proxyBeanMethods = false)
-    static class CustomEndpointConfiguration {
-
-        @Bean
-        CustomEndpoint customEndpoint(SwitchboardRegistry registry, SwitchboardResolverChain chain,
-                SwitchboardProperties properties) {
-            return new CustomEndpoint(registry, chain, properties);
-        }
     }
 }
