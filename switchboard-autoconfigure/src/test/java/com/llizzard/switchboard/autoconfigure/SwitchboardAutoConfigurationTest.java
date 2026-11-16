@@ -62,6 +62,35 @@ class SwitchboardAutoConfigurationTest {
     }
 
     @Test
+    void disabledLibraryRegistersNoSwitchboardBeans() {
+        new WebApplicationContextRunner()
+                .withConfiguration(SWITCHBOARD)
+                .withPropertyValues("switchboard.enabled=false")
+                .withBean("standard", StubStrategy.class, () -> strategy(REFUNDS, "STANDARD"))
+                .withBean("header", StubResolver.class, () -> resolver(REFUNDS, "h", "STANDARD"))
+                .run(context -> {
+                    assertThat(context).hasNotFailed();
+                    assertThat(context).doesNotHaveBean(SwitchboardRegistry.class);
+                    assertThat(context).doesNotHaveBean(SwitchboardResolverChain.class);
+                    assertThat(context).doesNotHaveBean(SwitchboardDispatcher.class);
+                    assertThat(context).doesNotHaveBean(SwitchboardStartupValidator.class);
+                    assertThat(context).doesNotHaveBean(SwitchboardExceptionHandler.class);
+                    assertThat(context).doesNotHaveBean(SwitchboardProperties.class);
+                    // Consumer strategies and resolvers are plain beans and still load harmlessly (§R11).
+                    assertThat(context).hasBean("standard").hasBean("header");
+                });
+    }
+
+    @Test
+    void disabledLibraryIgnoresOtherwiseInvalidConfiguration() {
+        new WebApplicationContextRunner()
+                .withConfiguration(SWITCHBOARD)
+                .withPropertyValues("switchboard.enabled=false", "switchboard.groups.refunds.resolution-order=zzz")
+                .withBean("standard", StubStrategy.class, () -> strategy(REFUNDS, "STANDARD"))
+                .run(context -> assertThat(context).hasNotFailed());
+    }
+
+    @Test
     void resolversAreOrderedByBeanOrder() {
         new WebApplicationContextRunner()
                 .withConfiguration(SWITCHBOARD)

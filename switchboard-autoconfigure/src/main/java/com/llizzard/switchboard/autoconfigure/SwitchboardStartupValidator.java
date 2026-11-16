@@ -5,10 +5,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 
 import com.llizzard.switchboard.SwitchboardGroup;
@@ -21,12 +24,19 @@ import com.llizzard.switchboard.SwitchboardStrategy;
  * {@link IllegalStateException}, which aborts startup:
  * <ul>
  *   <li>V6: a group has strategies but no resolvers;</li>
+ *   <li>V7: a group configured under {@code switchboard.groups} has no strategies and no resolvers;</li>
  *   <li>V8: one group name is declared with different types across strategies and resolvers.</li>
  * </ul>
+ *
+ * <p>W1: a configured case key that matches no strategy in its group is allowed (configuration may
+ * precede the implementation), but logs one WARN per key. The usual causes are a typo, or a key
+ * set through an environment variable, which lower-cases it.
  *
  * <p>Public and non-final so a consuming application can replace it (FR-029).
  */
 public class SwitchboardStartupValidator implements SmartInitializingSingleton {
+
+    private static final Log LOGGER = LogFactory.getLog(SwitchboardStartupValidator.class);
 
     private final List<SwitchboardStrategy<?, ?>> strategies;
     private final List<SwitchboardResolver<?>> resolvers;
@@ -49,6 +59,8 @@ public class SwitchboardStartupValidator implements SmartInitializingSingleton {
     public void afterSingletonsInstantiated() {
         validateGroupTypes();
         validateEveryStrategyGroupHasResolvers();
+        validateEveryConfiguredGroupIsUsed();
+        warnAboutConfiguredCasesWithoutStrategy();
     }
 
     private void validateGroupTypes() {
@@ -81,6 +93,37 @@ public class SwitchboardStartupValidator implements SmartInitializingSingleton {
                     + "' has strategies but no resolvers: no request could ever be routed to it."
                     + " Register at least one SwitchboardResolver for group '" + group + "'.");
         }
+    }
+
+    private void validateEveryConfiguredGroupIsUsed() {
+        Set<String> used = Stream.concat(strategies.stream().map(s -> s.group().name()),
+                        resolvers.stream().map(r -> r.group().name()))
+                .collect(Collectors.toSet());
+        new TreeSet<>(properties.groups().keySet()).stream()
+                .filter(group -> !used.contains(group))
+                .findFirst()
+                .ifPresent(group -> {
+                    throw new IllegalStateException("Switchboard group '" + group + "' is configured under"
+                            + " switchboard.groups, but no strategy or resolver uses it. Check the group name for a"
+                            + " typo, or remove its configuration.");
+                });
+    }
+
+    private void warnAboutConfiguredCasesWithoutStrategy() {
+        Map<String, Set<String>> keysByGroup = strategies.stream().collect(Collectors.groupingBy(
+                s -> s.group().name(),
+                Collectors.mapping(SwitchboardStrategy::caseKey, Collectors.toCollection(TreeSet::new))));
+        new TreeMap<>(properties.groups()).forEach((group, settings) -> {
+            Set<String> registered = keysByGroup.getOrDefault(group, Set.of());
+            new TreeSet<>(settings.cases().keySet()).stream()
+                    .filter(key -> !registered.contains(key))
+                    .forEach(key -> LOGGER.warn("Switchboard group '" + group + "' configures case '" + key
+                            + "', but no strategy in that group has this key (registered keys: " + registered
+                            + "). The setting has no effect. Keys are matched exactly and case-sensitively:"
+                            + " write them in bracket notation, for example switchboard.groups." + group
+                            + ".cases.[<KEY>].enabled=false, and do not set them through environment variables,"
+                            + " which lower-case them."));
+        });
     }
 
     /** @return the configuration this validator checks against */

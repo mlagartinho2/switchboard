@@ -2,6 +2,26 @@ spring:
   application:
     name: switchboard-sample
 
-# Switchboard settings (resolution order, per-case kill switches, metadata) are added in US3.
-# Case keys must be bracketed to keep their case and underscores, e.g. "[EXPEDITED]".
+# Every Switchboard control is configuration-only and read once at startup (contracts/configuration.md).
+# Case keys MUST be bracketed ("[EXPEDITED]") so they keep their case and underscores.
 switchboard:
+  groups:
+    refunds:
+      # Optional. When absent, every refunds resolver is consulted in @Order bean order.
+      # resolution-order: [refund-type-header, refund-amount]
+      cases:
+        "[STANDARD]":
+          owner: payments-team
+          version: "1.0"
+          description: Standard refund flow
+        "[EXPEDITED]":
+          enabled: true                    # kill switch: set to false to answer 404 for this case
+          owner: payments-team
+          version: "1.0"
+          description: Expedited refund for large amounts, settles within 4 hours
+    payments:
+      cases:
+        "[CARD]":
+          owner: payments-team
+          version: "1.0"
+          description: Card payment capture
