@@ -25,3 +25,11 @@ switchboard:
           owner: payments-team
           version: "1.0"
           description: Card payment capture
+
+# GET /actuator/switchboard: the read-only routing report (contracts/actuator-endpoint.md).
+# Like /actuator/env, restrict it to operators in a real deployment.
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,switchboard

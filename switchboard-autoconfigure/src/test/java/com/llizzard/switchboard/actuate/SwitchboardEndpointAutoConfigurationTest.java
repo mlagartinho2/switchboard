@@ -9,10 +9,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.actuate.autoconfigure.endpoint.EndpointAutoConfiguration;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.convert.ApplicationConversionService;
 import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.support.ConfigurableConversionService;
 
 import com.llizzard.switchboard.Stubs.StubResolver;
 import com.llizzard.switchboard.Stubs.StubStrategy;
@@ -27,7 +29,12 @@ class SwitchboardEndpointAutoConfigurationTest {
 
     private static final String EXPOSE = "management.endpoints.web.exposure.include=switchboard";
 
+    // SpringApplication installs this conversion service on the Environment; it lets the documented
+    // lower-case "none" convert to Access.NONE, as in a real application.
     private final WebApplicationContextRunner runner = new WebApplicationContextRunner()
+            .withInitializer(context -> context.getEnvironment()
+                    .setConversionService(
+                            (ConfigurableConversionService) ApplicationConversionService.getSharedInstance()))
             .withConfiguration(AutoConfigurations.of(SwitchboardAutoConfiguration.class,
                     SwitchboardEndpointAutoConfiguration.class, EndpointAutoConfiguration.class))
             .withBean("standard", StubStrategy.class, () -> strategy(REFUNDS, "STANDARD"))
@@ -37,6 +44,15 @@ class SwitchboardEndpointAutoConfigurationTest {
     void endpointIsPresentWhenExposedWithDefaultAccess() {
         runner.withPropertyValues(EXPOSE)
                 .run(context -> assertThat(context).hasSingleBean(SwitchboardEndpoint.class));
+    }
+
+    @Test
+    void endpointIsAbsentUntilExposed() {
+        // Boot's availability rule for every endpoint: default access is not enough, it must be exposed.
+        runner.run(context -> {
+            assertThat(context).hasNotFailed();
+            assertThat(context).doesNotHaveBean(SwitchboardEndpoint.class);
+        });
     }
 
     @Test

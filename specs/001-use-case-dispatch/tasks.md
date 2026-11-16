@@ -566,7 +566,7 @@ configured-but-unregistered case correctly (quickstart scenario 8).
 
 ### Tests for User Story 4 (write first, confirm they fail)
 
-- [ ] T049 [P] [US4] Write `AT/actuate/SwitchboardEndpointTest.java` (plain JUnit, real registry
+- [X] T049 [P] [US4] Write `AT/actuate/SwitchboardEndpointTest.java` (plain JUnit, real registry
   and chain built from stubs and `SwitchboardProperties`). It asserts:
   - The report covers every group that has a strategy or resolver, with group keys sorted.
   - `resolutionOrder` is the **effective** order (configured, or else default).
@@ -576,7 +576,7 @@ configured-but-unregistered case correctly (quickstart scenario 8).
   - `strategyClass` is the user class name: give a CGLIB-style subclass and expect the parent
     name, via `ClassUtils.getUserClass`. It is `null` when nothing is registered.
   - `owner`, `version`, and `description` come from configuration, or are `null`.
-- [ ] T050 [P] [US4] Write `AT/actuate/SwitchboardEndpointAutoConfigurationTest.java`
+- [X] T050 [P] [US4] Write `AT/actuate/SwitchboardEndpointAutoConfigurationTest.java`
   (`WebApplicationContextRunner` with both auto-configurations plus Boot's endpoint
   auto-configuration). It asserts the endpoint bean is:
   - present by default;
@@ -585,7 +585,7 @@ configured-but-unregistered case correctly (quickstart scenario 8).
   - absent when actuator classes are hidden with `FilteredClassLoader(Endpoint.class)`, and that
     context still starts (FR-026);
   - absent with `switchboard.enabled=false`.
-- [ ] T051 [P] [US4] Write `ST/SampleEndpointTest.java` (MockMvc, with
+- [X] T051 [P] [US4] Write `ST/SampleEndpointTest.java` (MockMvc, with
   `switchboard.groups.refunds.cases.[EXPEDITED].enabled=false` and
   `switchboard.groups.refunds.cases.[LEGACY].owner=payments-team`). It asserts
   `GET /actuator/switchboard` returns JSON matching
@@ -597,17 +597,17 @@ configured-but-unregistered case correctly (quickstart scenario 8).
 
 ### Implementation for User Story 4
 
-- [ ] T052 [P] [US4] Create the records in `AC/actuate/SwitchboardReport.java`: `SwitchboardReport(Map<String,
+- [X] T052 [P] [US4] Create the records in `AC/actuate/SwitchboardReport.java`: `SwitchboardReport(Map<String,
   GroupReport> groups)`, `GroupReport(List<String> resolutionOrder, List<CaseReport> cases)`,
   and `CaseReport(String key, boolean enabled, boolean registered, String strategyClass, String
   owner, String version, String description)`. All collections are defensively copied, and
   `groups` is a sorted (`TreeMap`) copy wrapped as unmodifiable.
-- [ ] T053 [US4] Implement `AC/actuate/SwitchboardEndpoint.java`: `@Endpoint(id =
+- [X] T053 [US4] Implement `AC/actuate/SwitchboardEndpoint.java`: `@Endpoint(id =
   "switchboard")`, constructor `(SwitchboardRegistry, SwitchboardResolverChain,
   SwitchboardProperties)` with `requireNonNull`, and one `@ReadOperation SwitchboardReport
   report()` built according to the rules in
   [contracts/actuator-endpoint.md](contracts/actuator-endpoint.md). Make T049 pass.
-- [ ] T054 [US4] Implement `AC/autoconfigure/SwitchboardEndpointAutoConfiguration.java`:
+- [X] T054 [US4] Implement `AC/autoconfigure/SwitchboardEndpointAutoConfiguration.java`:
   - Annotations: `@AutoConfiguration(after = SwitchboardAutoConfiguration.class)`,
     `@ConditionalOnClass(Endpoint.class)`, and
     `@ConditionalOnBean(SwitchboardRegistry.class)`.
@@ -615,7 +615,7 @@ configured-but-unregistered case correctly (quickstart scenario 8).
   - Append the class to
     `AR/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`.
   - Make T050 pass.
-- [ ] T055 [US4] Expose the endpoint in the sample: add
+- [X] T055 [US4] Expose the endpoint in the sample: add
   `management.endpoints.web.exposure.include: health,switchboard` to `SR/application.yml`.
   Make T051 pass.
 

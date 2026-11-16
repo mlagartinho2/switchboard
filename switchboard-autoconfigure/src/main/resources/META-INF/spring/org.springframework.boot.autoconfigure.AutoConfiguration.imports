@@ -1,1 +1,2 @@
 com.llizzard.switchboard.autoconfigure.SwitchboardAutoConfiguration
+com.llizzard.switchboard.autoconfigure.SwitchboardEndpointAutoConfiguration
