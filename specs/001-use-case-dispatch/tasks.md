@@ -194,7 +194,7 @@ and §5).
 
 ### Tests for User Story 1 (write first, confirm they fail)
 
-- [ ] T015 [P] [US1] Write `AT/SwitchboardRegistryTest.java` (plain JUnit, stub strategies). It
+- [X] T015 [P] [US1] Write `AT/SwitchboardRegistryTest.java` (plain JUnit, stub strategies). It
   checks:
   - `find("refunds","STANDARD")` returns the stub.
   - `find` for an unknown key, or for a key registered only in another group, returns
@@ -213,7 +213,7 @@ and §5).
     different request types throw, naming the group.
   - A later mutation of the input list does not affect the registry.
   - A null constructor argument throws `NullPointerException` with a message.
-- [ ] T016 [P] [US1] Write `AT/SwitchboardResolverChainTest.java` (plain JUnit,
+- [X] T016 [P] [US1] Write `AT/SwitchboardResolverChainTest.java` (plain JUnit,
   `MockHttpServletRequest`, stub resolvers). It checks:
   - With no configured order, resolvers are consulted in the given list order and the first
     non-empty result wins, returning `SwitchboardResolution(key, resolverName)`.
@@ -228,7 +228,7 @@ and §5).
   - **V8**: two resolvers whose group handles share a name but differ in types throw.
   - `resolutionOrder("refunds")` returns the effective name list, and an empty list for an
     unknown group.
-- [ ] T017 [P] [US1] Write `AT/SwitchboardDispatcherTest.java` (plain JUnit with Mockito mocks
+- [X] T017 [P] [US1] Write `AT/SwitchboardDispatcherTest.java` (plain JUnit with Mockito mocks
   of registry and chain, or real instances with stubs). It checks:
   - The happy path returns the strategy's response, and the strategy receives
     `SwitchboardContext("refunds", key, resolverName)` (FR-005).
@@ -246,7 +246,7 @@ and §5).
     (`handled`, `not_found`, `not_implemented`, `failed`) produces exactly one line containing
     the group, the key (or `-`), the resolver (or `-`), the outcome, and an elapsed time.
   - No log line contains a marker string placed in the payload's `toString()` (FR-027).
-- [ ] T018 [P] [US1] Write `AT/autoconfigure/SwitchboardStartupValidatorTest.java`. This is a
+- [X] T018 [P] [US1] Write `AT/autoconfigure/SwitchboardStartupValidatorTest.java`. This is a
   plain JUnit test with no Spring context, as the constitution's Testing section requires. It
   builds `new SwitchboardStartupValidator(strategies, resolvers, properties)` from stub
   strategies and resolvers and calls `afterSingletonsInstantiated()` directly. It checks:
@@ -260,7 +260,7 @@ and §5).
     strategies does not throw.
   - A null constructor argument throws `NullPointerException` with a message.
   - A later mutation of the input lists does not change the outcome.
-- [ ] T019 [P] [US1] Write `AT/autoconfigure/SwitchboardStartupValidationTest.java` using
+- [X] T019 [P] [US1] Write `AT/autoconfigure/SwitchboardStartupValidationTest.java` using
   `WebApplicationContextRunner` with `AutoConfigurations.of(SwitchboardAutoConfiguration.class)`
   and user beans registered per case. It checks:
   - **V6**: a group with a strategy but no resolver fails startup, and the root cause message
@@ -270,12 +270,12 @@ and §5).
   - A valid setup starts.
   - **Group without implementations** (spec edge case): a context whose only bean for group
     `orphans` is a resolver (no strategy) starts successfully.
-- [ ] T020 [P] [US1] Write `AT/autoconfigure/SwitchboardAutoConfigurationTest.java` (activation
+- [X] T020 [P] [US1] Write `AT/autoconfigure/SwitchboardAutoConfigurationTest.java` (activation
   only for now). In a servlet web context with one stub strategy and one stub resolver, it
   asserts that the context has single beans of `SwitchboardRegistry`,
   `SwitchboardResolverChain`, `SwitchboardDispatcher`, `SwitchboardStartupValidator`, and
   `SwitchboardProperties`, and that a non-web context gets none of them.
-- [ ] T021 [P] [US1] Write `ST/SampleDispatchTest.java` (`@SpringBootTest` +
+- [X] T021 [P] [US1] Write `ST/SampleDispatchTest.java` (`@SpringBootTest` +
   `@AutoConfigureMockMvc`). It checks:
   - `POST /api/refunds` with header `X-Refund-Type: STANDARD` and body `{"amount":50}` returns
     200 with a body showing the `STANDARD` strategy handled it.
@@ -298,11 +298,11 @@ and §5).
       resolvers and returns 501.
     - The same request with no principal returns 501.
     - No Spring Security dependency is added (research §R16).
-- [ ] T022 [P] [US1] Write `ST/SampleNewUseCaseTest.java` (SC-001). `@SpringBootTest` that
+- [X] T022 [P] [US1] Write `ST/SampleNewUseCaseTest.java` (SC-001). `@SpringBootTest` that
   `@Import`s a test-only `PartialRefundStrategy` (key `PARTIAL`, group `RefundGroup.REFUNDS`)
   defined in the same test file. `X-Refund-Type: PARTIAL` returns 200 from it, without any
   change to main sources or `application.yml`.
-- [ ] T023 [P] [US1] Write `ST/refunds/RefundResolversTest.java` (plain JUnit,
+- [X] T023 [P] [US1] Write `ST/refunds/RefundResolversTest.java` (plain JUnit,
   `MockHttpServletRequest`, no Spring context; required by the constitution's Testing section,
   "every SwitchboardResolver has unit tests"). It checks:
   - `RefundTypeHeaderResolver`: `name()` is `refund-type-header`, `group()` is
@@ -312,14 +312,14 @@ and §5).
     `amount = 1000.01` and for `amount = 5000`, and it returns empty for `amount = 1000`,
     `amount = 50`, and a `null` payload.
   - The test must fail to compile or fail until T032 exists.
-- [ ] T024 [P] [US1] Write `ST/payments/PaymentMethodHeaderResolverTest.java` (plain JUnit,
+- [X] T024 [P] [US1] Write `ST/payments/PaymentMethodHeaderResolverTest.java` (plain JUnit,
   `MockHttpServletRequest`). It checks that `name()` is `payment-method-header`, `group()` is
   `PaymentGroup.PAYMENTS`, it returns the `X-Payment-Method` header value, and it returns empty
   when the header is absent. The test must fail until T033 exists.
 
 ### Implementation for User Story 1
 
-- [ ] T025 [US1] Implement `AC/SwitchboardRegistry.java`:
+- [X] T025 [US1] Implement `AC/SwitchboardRegistry.java`:
   - Constructor `(List<SwitchboardStrategy<?, ?>> strategies, SwitchboardProperties properties)`.
   - `requireNonNull` on both arguments.
   - Group the strategies into an immutable `Map<String, Map<String, SwitchboardStrategy<?,?>>>`
@@ -330,7 +330,7 @@ and §5).
     empty map when the group is unknown, and `groups()`.
   - The properties are stored for US3, and enablement is not applied yet.
   - Make T015 pass.
-- [ ] T026 [US1] Implement `AC/SwitchboardResolverChain.java`:
+- [X] T026 [US1] Implement `AC/SwitchboardResolverChain.java`:
   - Constructor `(List<SwitchboardResolver<?>> orderedResolvers, SwitchboardProperties
     properties)`. Take a defensive copy and group the resolvers per group name, preserving the
     given order.
@@ -342,7 +342,7 @@ and §5).
   - The cast from `SwitchboardResolver<?>` to `SwitchboardResolver<Req>` is a scoped local
     `@SuppressWarnings("unchecked")` with a one-line safety comment that refers to V8.
   - Make T016 pass.
-- [ ] T027 [US1] Implement `AC/SwitchboardDispatcher.java` exactly per
+- [X] T027 [US1] Implement `AC/SwitchboardDispatcher.java` exactly per
   [contracts/java-api.md](contracts/java-api.md):
   - Constructor `(SwitchboardResolverChain, SwitchboardRegistry)` with `requireNonNull`.
   - `dispatch` follows the flow in [data-model.md](data-model.md) "Dispatch flow".
@@ -352,14 +352,14 @@ and §5).
     `failed` (rethrow after logging), and elapsed time via `System.nanoTime()` in microseconds.
     Never log the payload (§R9).
   - Make T017 pass.
-- [ ] T028 [US1] Implement `AC/autoconfigure/SwitchboardStartupValidator.java`:
+- [X] T028 [US1] Implement `AC/autoconfigure/SwitchboardStartupValidator.java`:
   - Implements `SmartInitializingSingleton`.
   - Constructor `(List<SwitchboardStrategy<?,?>>, List<SwitchboardResolver<?>>,
     SwitchboardProperties)` with `requireNonNull` and defensive copies.
   - In `afterSingletonsInstantiated()`, throw `IllegalStateException` for **V6** ("Group 'g'
     has strategies but no resolvers") and for **V8 across strategies and resolvers**.
   - Make T018 and the T019 cases pass. Its US3 rules are added in T047.
-- [ ] T029 [US1] Implement `AC/autoconfigure/SwitchboardAutoConfiguration.java`:
+- [X] T029 [US1] Implement `AC/autoconfigure/SwitchboardAutoConfiguration.java`:
   - Annotations: `@AutoConfiguration`, `@ConditionalOnWebApplication(type = SERVLET)`,
     `@ConditionalOnProperty(prefix = "switchboard", name = "enabled", havingValue = "true",
     matchIfMissing = true)`, and `@EnableConfigurationProperties(SwitchboardProperties.class)`.
@@ -371,19 +371,19 @@ and §5).
   - Register the class in
     `AR/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`.
   - Make T019 and T020 pass.
-- [ ] T030 [P] [US1] Create the sample refunds contract:
+- [X] T030 [P] [US1] Create the sample refunds contract:
   - `SM/refunds/RefundRequest.java`: record `(String orderId, BigDecimal amount)`.
   - `SM/refunds/RefundResponse.java`: record `(String handledBy, String status, Integer
     expectedSettlementHours)`. `expectedSettlementHours` is nullable, filled only by
     `EXPEDITED`, and annotated `@JsonInclude(NON_NULL)`.
   - `SM/refunds/RefundGroup.java`: constant `REFUNDS = SwitchboardGroup.of("refunds",
     RefundRequest.class, RefundResponse.class)`.
-- [ ] T031 [P] [US1] Create the sample payments contract:
+- [X] T031 [P] [US1] Create the sample payments contract:
   - `SM/payments/PaymentRequest.java`: record `(String orderId, BigDecimal amount)`.
   - `SM/payments/PaymentResponse.java`: record `(String handledBy, String status)`.
   - `SM/payments/PaymentGroup.java`: constant `PAYMENTS = SwitchboardGroup.of("payments",
     PaymentRequest.class, PaymentResponse.class)`.
-- [ ] T032 [US1] Create the sample refunds strategies and resolvers, all `@Component`:
+- [X] T032 [US1] Create the sample refunds strategies and resolvers, all `@Component`:
   - `SM/refunds/StandardRefundStrategy.java`: key `STANDARD`.
   - `SM/refunds/ExpeditedRefundStrategy.java`: key `EXPEDITED`; sets
     `expectedSettlementHours=4`.
@@ -393,13 +393,13 @@ and §5).
     `EXPEDITED` when `payload.amount() > 1000`, otherwise empty.
   - Depends on T030.
   - Make T023 pass.
-- [ ] T033 [US1] Create the sample payments strategy and resolver, both `@Component`:
+- [X] T033 [US1] Create the sample payments strategy and resolver, both `@Component`:
   - `SM/payments/CardPaymentStrategy.java`: key `CARD`.
   - `SM/payments/PaymentMethodHeaderResolver.java`: name `payment-method-header`; returns the
     `X-Payment-Method` header value.
   - Depends on T031.
   - Make T024 pass.
-- [ ] T034 [US1] Create the sample controllers and application:
+- [X] T034 [US1] Create the sample controllers and application:
   - `SM/refunds/RefundController.java`: `POST /api/refunds` returns
     `dispatcher.dispatch(RefundGroup.REFUNDS, http, body)`.
   - `SM/payments/PaymentController.java`: `POST /api/payments`, written the same way.
