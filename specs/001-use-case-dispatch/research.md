@@ -76,13 +76,16 @@ They do not affect the design.
   - Documentation and the sample use bracket notation for keys (`"[REFUND_STANDARD]":`).
   - At startup the library logs a WARN for any configured case key that matches no registered
     strategy in its group.
-- **Rationale**: Spring Boot strips characters other than letters, digits, `-` and `.` from
-  map keys unless the key is bracketed. Without brackets, `REFUND_STANDARD` binds as
-  `REFUNDSTANDARD`, and the kill switch would silently miss. Brackets preserve the key exactly.
-  The WARN catches the mistake, while still allowing configuration without an implementation
-  (spec edge case). Environment variables cannot express case-sensitive or underscored map keys,
-  so the documentation points operators to `SPRING_APPLICATION_JSON` or a config file for
-  per-case overrides.
+- **Rationale**: Brackets make Spring Boot bind a map key exactly as written, so they are the one
+  rule that is always safe. Without brackets, a key from a YAML or properties file keeps its
+  upper case and underscores (`REFUND_STANDARD` binds as `REFUND_STANDARD`). It does lose any
+  character other than letters, digits, `-` and `_` (`a$b` binds as `ab`), and a `.` splits it
+  into nested keys. Valid case keys never contain those characters, so in files the brackets are
+  a safeguard, not a necessity. Environment variables are different: Boot lower-cases the map
+  keys they produce, so they cannot set a case-sensitive key. The documentation therefore points
+  operators to `SPRING_APPLICATION_JSON` or a config file for per-case overrides. The startup
+  WARN catches a key that matches no strategy, whether from a typo or an environment variable,
+  while still allowing configuration without an implementation (spec edge case).
 - **Alternatives considered**:
   - A list of `{key, enabled}` objects avoids key mangling, but profile overrides replace whole
     lists, so turning off one case would mean restating every case. Rejected.
@@ -91,6 +94,11 @@ They do not affect the design.
     case "configuration without implementation". Rejected.
 - **Verify at implementation**: a binding test confirms bracketed keys keep their case and
   underscores.
+- **Verified at implementation** (Spring Boot 4.1.2, `Map<String, CaseSettings>`): bracketed keys
+  bind unchanged. Unbracketed keys from YAML and from a map property source also keep case and
+  underscores (`REFUND_STANDARD`, `Mixed_Case-1`), and drop other characters (`a$b` → `ab`). The
+  earlier claim that `REFUND_STANDARD` binds as `REFUNDSTANDARD` was wrong for this binding shape
+  and has been corrected above.
 
 ## R6 — Default resolver order
 

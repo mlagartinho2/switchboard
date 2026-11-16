@@ -10,8 +10,10 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
  * Switchboard configuration, bound from {@code switchboard.*} once at startup. Changes require a
  * restart.
  *
- * <p>Case keys must be bracketed in configuration to keep their case and underscores, for
- * example {@code switchboard.groups.refunds.cases.[REFUND_STANDARD].enabled=false}.
+ * <p>Write case keys in bracket notation, for example
+ * {@code switchboard.groups.refunds.cases.[REFUND_STANDARD].enabled=false}: a bracketed key binds
+ * exactly as written. Keys are matched case-sensitively, and environment variables lower-case
+ * them, so set per-case values in a configuration file or {@code SPRING_APPLICATION_JSON}.
  *
  * @param enabled whether Switchboard auto-configuration is active (default {@code true})
  * @param groups settings per dispatch group, keyed by group name

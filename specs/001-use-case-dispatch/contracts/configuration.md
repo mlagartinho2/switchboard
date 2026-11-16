@@ -14,7 +14,7 @@ switchboard:
       resolution-order:              # optional; absent → all group resolvers in bean order (§R6)
         - <resolver-name>            #   present → only these, in this order; must be non-empty
       cases:
-        "[<CASE_KEY>]":              # brackets REQUIRED to keep case/underscores (§R5)
+        "[<CASE_KEY>]":              # always bracket: the key then binds exactly as written (§R5)
           enabled: true              # default true; false → 404 for this key (FR-014/015)
           owner: <text>              # optional metadata, shown in the report (FR-020)
           version: <text>
@@ -55,8 +55,11 @@ Full list: [data-model.md](../data-model.md) (rules V1–V9, W1).
 
 ## Operator notes
 
-- Unbracketed keys lose characters: `REFUND_STANDARD:` binds as `REFUNDSTANDARD`. The W1 warning
-  flags this.
+- Always write case keys in brackets. Brackets make the key bind exactly as written. Without
+  them, a key in a YAML or properties file keeps its upper case and underscores, but loses any
+  other character and is split at a `.`. Valid case keys contain neither, so this is a safeguard.
+- Case keys are matched exactly and case-sensitively. A configured key that matches no strategy in
+  its group (a typo, for example) starts normally and logs a W1 warning naming the group and key.
 - Environment variables cannot express case-sensitive or underscored map keys. For per-case
   overrides from the environment, use `SPRING_APPLICATION_JSON`, for example
   `{"switchboard":{"groups":{"refunds":{"cases":{"[EXPEDITED]":{"enabled":false}}}}}}`, or an

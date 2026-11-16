@@ -3,14 +3,22 @@ package com.llizzard.switchboard.autoconfigure;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.env.YamlPropertySourceLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.StandardEnvironment;
+import org.springframework.core.env.SystemEnvironmentPropertySource;
+import org.springframework.core.io.ByteArrayResource;
 
 import com.llizzard.switchboard.autoconfigure.SwitchboardProperties.CaseSettings;
 import com.llizzard.switchboard.autoconfigure.SwitchboardProperties.GroupSettings;
@@ -62,6 +70,95 @@ class SwitchboardPropertiesBindingTest {
     void singleEntryResolutionOrderBinds() {
         bind(props -> assertThat(props.groups().get("refunds").resolutionOrder()).containsExactly("a"),
                 "switchboard.groups.refunds.resolution-order[0]=a");
+    }
+
+    // --- How unbracketed case keys bind (research §R5, contracts/configuration.md "Operator notes") ---
+
+    /** Binds from a real YAML document, the way an application.yml is read. */
+    private void bindYaml(Consumer<SwitchboardProperties> assertions, String yaml) {
+        runner.withInitializer(context -> {
+            try {
+                new YamlPropertySourceLoader()
+                        .load("test.yml", new ByteArrayResource(yaml.getBytes(StandardCharsets.UTF_8)))
+                        .forEach(context.getEnvironment().getPropertySources()::addFirst);
+            }
+            catch (IOException ex) {
+                throw new UncheckedIOException(ex);
+            }
+        }).run(context -> {
+            assertThat(context).hasNotFailed();
+            assertions.accept(context.getBean(SwitchboardProperties.class));
+        });
+    }
+
+    @Test
+    void unbracketedYamlKeyKeepsCaseAndUnderscores() {
+        bindYaml(props -> assertThat(props.group("refunds").cases())
+                        .containsOnlyKeys("REFUND_STANDARD", "Mixed_Case-1"),
+                """
+                switchboard:
+                  groups:
+                    refunds:
+                      cases:
+                        REFUND_STANDARD:
+                          enabled: false
+                        Mixed_Case-1:
+                          owner: x
+                """);
+    }
+
+    @Test
+    void unbracketedYamlKeyDropsOtherCharacters() {
+        bindYaml(props -> assertThat(props.group("refunds").cases()).containsOnlyKeys("ab"),
+                """
+                switchboard:
+                  groups:
+                    refunds:
+                      cases:
+                        "a$b":
+                          owner: x
+                """);
+    }
+
+    @Test
+    void unbracketedYamlKeyIsSplitAtADot() {
+        bindYaml(props -> assertThat(props.group("refunds").cases()).doesNotContainKey("REFUND.STANDARD"),
+                """
+                switchboard:
+                  groups:
+                    refunds:
+                      cases:
+                        "REFUND.STANDARD":
+                          owner: x
+                """);
+    }
+
+    @Test
+    void bracketedYamlKeyBindsExactlyAsWritten() {
+        bindYaml(props -> assertThat(props.group("refunds").cases()).containsOnlyKeys("REFUND.STANDARD", "a$b"),
+                """
+                switchboard:
+                  groups:
+                    refunds:
+                      cases:
+                        "[REFUND.STANDARD]":
+                          owner: x
+                        "[a$b]":
+                          owner: y
+                """);
+    }
+
+    @Test
+    void environmentVariableLowerCasesTheKey() {
+        runner.withInitializer(context -> context.getEnvironment().getPropertySources().addFirst(
+                        new SystemEnvironmentPropertySource(StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME,
+                                Map.of("SWITCHBOARD_GROUPS_REFUNDS_CASES_EXPEDITED_ENABLED", "false"))))
+                .run(context -> {
+                    SwitchboardProperties props = context.getBean(SwitchboardProperties.class);
+                    assertThat(props.group("refunds").cases()).containsOnlyKeys("expedited");
+                    // So the kill switch misses the real key:
+                    assertThat(props.isEnabled("refunds", "EXPEDITED")).isTrue();
+                });
     }
 
     @Test

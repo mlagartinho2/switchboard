@@ -3,7 +3,7 @@ spring:
     name: switchboard-sample
 
 # Every Switchboard control is configuration-only and read once at startup (contracts/configuration.md).
-# Case keys MUST be bracketed ("[EXPEDITED]") so they keep their case and underscores.
+# Always bracket case keys ("[EXPEDITED]"): a bracketed key binds exactly as written.
 switchboard:
   groups:
     refunds:
