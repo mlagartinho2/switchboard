@@ -657,7 +657,7 @@ the user's bean, and contains no second instance.
 
 **Purpose**: Performance, documentation, constitution compliance, and release readiness.
 
-- [ ] T059 [P] Write `AT/SwitchboardDispatchPerformanceTest.java` (SC-008, §R12):
+- [X] T059 [P] Write `AT/SwitchboardDispatchPerformanceTest.java` (SC-008, §R12):
   - Use a real chain and registry with one group, three stub resolvers (the third one answers),
     and a stub strategy returning a constant.
   - Use one `MockHttpServletRequest`, reused across calls.
@@ -665,11 +665,11 @@ the user's bean, and contains no second instance.
     `System.nanoTime()`.
   - Assert p95 < 1,000,000 ns.
   - Do not use JMH (Principle VII).
-- [ ] T060 [P] Add Javadoc to every public type and method in `AC/`, covering contracts,
+- [X] T060 [P] Add Javadoc to every public type and method in `AC/`, covering contracts,
   nullability, thrown exceptions, and the key and group name formats. Check with
   `mvn -pl switchboard-autoconfigure javadoc:javadoc` (the Maven Javadoc plugin is part of the
   standard build tooling; no new library dependency).
-- [ ] T061 [P] Write the root `README.md`, covering:
+- [X] T061 [P] Write the root `README.md`, covering:
   - The support matrix (Switchboard 2.0.0, Spring Boot 4.x, Java 17+).
   - The starter dependency snippet (`com.llizzard:switchboard-spring-boot-starter:2.0.0`).
   - A consumer walkthrough (group constant, strategy, resolver, one-line controller).
@@ -679,7 +679,7 @@ the user's bean, and contains no second instance.
   - The error contract, linking [contracts/http-errors.md](contracts/http-errors.md).
   - The endpoint exposure and security note.
   - The `switchboard.enabled=false` consumer obligation (§R11).
-- [ ] T062 Run a constitution compliance audit and fix any finding:
+- [X] T062 Run a constitution compliance audit and fix any finding:
   - `grep -rn "SuppressWarnings" switchboard-autoconfigure/src/main` shows only the two scoped
     local casts (dispatcher and chain), each with a comment.
   - Every framework constructor calls `requireNonNull`.
@@ -687,7 +687,7 @@ the user's bean, and contains no second instance.
   - `mvn dependency:tree` for `switchboard-autoconfigure` and the starter lists only Spring,
     Jakarta, Jackson, SLF4J/Logback, Micrometer-observation (if transitively pulled by Spring),
     and BOM-managed test artifacts. Report anything else for approval (Principle VII).
-- [ ] T063 Verify packaging:
+- [X] T063 Verify packaging:
   - After `mvn verify`, the starter jar contains no `.class` files.
   - The autoconfigure jar contains
     `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` listing
@@ -699,7 +699,7 @@ the user's bean, and contains no second instance.
     Spring's `ClassPathScanningCandidateComponentProvider` (no new dependency). It asserts that
     no concrete class implements `SwitchboardStrategy` or `SwitchboardResolver`, and that no
     class is annotated `@Controller` or `@RestController`.
-- [ ] T064 Run every scenario in [quickstart.md](quickstart.md) against
+- [X] T064 Run every scenario in [quickstart.md](quickstart.md) against
   `mvn -pl switchboard-sample -am spring-boot:run`, including the restart-based configuration
   changes in §4. Record any mismatch as a bug, starting with a failing test (Principle VI).
 

@@ -14,6 +14,11 @@ import java.util.TreeMap;
  */
 public record SwitchboardReport(Map<String, GroupReport> groups) {
 
+    /**
+     * Copies {@code groups} into an unmodifiable map sorted by group name.
+     *
+     * @throws NullPointerException if {@code groups} is null
+     */
     public SwitchboardReport {
         groups = Collections.unmodifiableMap(new TreeMap<>(Objects.requireNonNull(groups, "groups must not be null")));
     }
@@ -26,6 +31,11 @@ public record SwitchboardReport(Map<String, GroupReport> groups) {
      */
     public record GroupReport(List<String> resolutionOrder, List<CaseReport> cases) {
 
+        /**
+         * Takes defensive, unmodifiable copies of both lists.
+         *
+         * @throws NullPointerException if either list is null
+         */
         public GroupReport {
             resolutionOrder = List.copyOf(Objects.requireNonNull(resolutionOrder, "resolutionOrder must not be null"));
             cases = List.copyOf(Objects.requireNonNull(cases, "cases must not be null"));
@@ -48,6 +58,11 @@ public record SwitchboardReport(Map<String, GroupReport> groups) {
     public record CaseReport(String key, boolean enabled, boolean registered, String strategyClass, String owner,
             String version, String description) {
 
+        /**
+         * Validates the key.
+         *
+         * @throws NullPointerException if {@code key} is null
+         */
         public CaseReport {
             Objects.requireNonNull(key, "key must not be null");
         }

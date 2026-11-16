@@ -39,6 +39,8 @@ public final class SwitchboardGroup<Req, Res> {
      * Creates a group handle, validating every argument eagerly.
      *
      * @param name lower-case kebab-case group name
+     * @param <Req> the request payload type
+     * @param <Res> the response type
      * @param requestType the request payload type
      * @param responseType the response type
      * @return the group handle
@@ -57,17 +59,29 @@ public final class SwitchboardGroup<Req, Res> {
         return new SwitchboardGroup<>(name, requestType, responseType);
     }
 
-    /** @return the group name, also its configuration key */
+    /**
+     * Returns the group name, also its configuration key.
+     *
+     * @return the group name, also its configuration key
+     */
     public String name() {
         return name;
     }
 
-    /** @return the request payload type */
+    /**
+     * Returns the request payload type.
+     *
+     * @return the request payload type
+     */
     public Class<Req> requestType() {
         return requestType;
     }
 
-    /** @return the response type */
+    /**
+     * Returns the response type.
+     *
+     * @return the response type
+     */
     public Class<Res> responseType() {
         return responseType;
     }
@@ -88,7 +102,11 @@ public final class SwitchboardGroup<Req, Res> {
         return Objects.hash(name, requestType, responseType);
     }
 
-    /** @return the group name */
+    /**
+     * Returns the group name.
+     *
+     * @return the group name
+     */
     @Override
     public String toString() {
         return name;

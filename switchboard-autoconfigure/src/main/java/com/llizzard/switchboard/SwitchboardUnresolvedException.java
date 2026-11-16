@@ -9,6 +9,8 @@ public final class SwitchboardUnresolvedException extends SwitchboardDispatchExc
     private static final long serialVersionUID = 1L;
 
     /**
+     * Creates the exception for a group in which no resolver produced a key.
+     *
      * @param group the dispatch group name
      * @throws NullPointerException if {@code group} is null
      */

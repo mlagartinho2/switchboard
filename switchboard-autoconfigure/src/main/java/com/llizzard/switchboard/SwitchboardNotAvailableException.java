@@ -10,9 +10,12 @@ public final class SwitchboardNotAvailableException extends SwitchboardDispatchE
 
     private static final long serialVersionUID = 1L;
 
+    /** The resolved use-case key; part of the serialized form. */
     private final String caseKey;
 
     /**
+     * Creates the exception for a key that has no enabled strategy in its group.
+     *
      * @param group the dispatch group name
      * @param caseKey the key that was resolved
      * @throws NullPointerException if either argument is null
@@ -23,7 +26,11 @@ public final class SwitchboardNotAvailableException extends SwitchboardDispatchE
         this.caseKey = caseKey;
     }
 
-    /** @return the use-case key that was resolved */
+    /**
+     * Returns the use-case key that was resolved.
+     *
+     * @return the use-case key that was resolved
+     */
     public String caseKey() {
         return caseKey;
     }

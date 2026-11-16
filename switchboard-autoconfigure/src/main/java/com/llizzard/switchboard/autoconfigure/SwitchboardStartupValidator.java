@@ -43,6 +43,8 @@ public class SwitchboardStartupValidator implements SmartInitializingSingleton {
     private final SwitchboardProperties properties;
 
     /**
+     * Creates a validator over the given beans and configuration.
+     *
      * @param strategies every strategy bean; copied
      * @param resolvers every resolver bean; copied
      * @param properties the bound configuration
@@ -126,7 +128,11 @@ public class SwitchboardStartupValidator implements SmartInitializingSingleton {
         });
     }
 
-    /** @return the configuration this validator checks against */
+    /**
+     * Returns the configuration this validator checks against.
+     *
+     * @return the configuration this validator checks against
+     */
     protected SwitchboardProperties properties() {
         return properties;
     }

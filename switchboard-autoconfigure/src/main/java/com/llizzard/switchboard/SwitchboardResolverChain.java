@@ -41,6 +41,8 @@ public class SwitchboardResolverChain {
     private final SwitchboardProperties properties;
 
     /**
+     * Builds the chain, applying any configured resolution order, and validates it.
+     *
      * @param orderedResolvers every resolver bean, in consultation order; copied
      * @param properties the bound configuration
      * @throws NullPointerException if an argument is null
@@ -77,6 +79,8 @@ public class SwitchboardResolverChain {
     }
 
     /**
+     * Returns the resolvers to consult for one group, in order.
+     *
      * @param members the group's resolvers, in the given order; names already validated (V3)
      * @param configuredOrder the configured {@code resolution-order}, or null when absent
      * @return the resolvers to consult, in order
@@ -129,6 +133,7 @@ public class SwitchboardResolverChain {
      * @param group the group handle
      * @param httpRequest the current HTTP request
      * @param payload the request payload; may be null
+     * @param <Req> the group's request payload type
      * @return the winning key and resolver name, or empty when no resolver produced a key
      * @throws IllegalArgumentException if {@code group} has the same name as the registered group
      *         but different types
@@ -156,6 +161,8 @@ public class SwitchboardResolverChain {
     }
 
     /**
+     * Returns the effective resolver order for a group: the configured order, or else the given (bean) order.
+     *
      * @param group the group name
      * @return the names of the resolvers consulted for the group, in order; empty for an unknown group
      */
@@ -165,12 +172,20 @@ public class SwitchboardResolverChain {
                 .toList();
     }
 
-    /** @return the names of the groups that have at least one resolver */
+    /**
+     * Returns the names of the groups that have at least one resolver.
+     *
+     * @return the names of the groups that have at least one resolver
+     */
     public Set<String> groups() {
         return resolversByGroup.keySet();
     }
 
-    /** @return the configuration this chain was built with */
+    /**
+     * Returns the configuration this chain was built with.
+     *
+     * @return the configuration this chain was built with
+     */
     protected SwitchboardProperties properties() {
         return properties;
     }

@@ -29,6 +29,10 @@
         <!-- Latest GA Spring Boot 4.x on Maven Central at implementation time (Principle VII: no M/RC). -->
         <spring-boot.version>4.1.2</spring-boot.version>
 
+        <!-- Only the sample is runnable: lets "mvn -pl switchboard-sample -am spring-boot:run" skip the
+             parent and library modules, which have no main class. The sample sets this to false. -->
+        <spring-boot.run.skip>true</spring-boot.run.skip>
+
         <!-- Plugin versions aligned with spring-boot-dependencies ${spring-boot.version}.
              A BOM import does not carry pluginManagement, so they are pinned here. -->
         <maven-clean-plugin.version>3.5.0</maven-clean-plugin.version>

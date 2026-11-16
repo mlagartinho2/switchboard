@@ -20,10 +20,16 @@ package com.llizzard.switchboard;
  */
 public interface SwitchboardStrategy<Req, Res> {
 
-    /** @return the dispatch group (contract) this use case serves */
+    /**
+     * Returns the dispatch group (contract) this use case serves.
+     *
+     * @return the dispatch group (contract) this use case serves
+     */
     SwitchboardGroup<Req, Res> group();
 
     /**
+     * Returns the use-case key this strategy handles.
+     *
      * @return the use-case key; matches {@code [A-Za-z0-9_-]+} and is unique within the group
      */
     String caseKey();

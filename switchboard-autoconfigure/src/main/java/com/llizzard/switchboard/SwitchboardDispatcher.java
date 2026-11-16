@@ -35,6 +35,8 @@ public class SwitchboardDispatcher {
     private final SwitchboardRegistry registry;
 
     /**
+     * Creates a dispatcher over the given resolver chain and registry.
+     *
      * @param chain the resolver chain
      * @param registry the strategy registry
      * @throws NullPointerException if an argument is null
@@ -50,6 +52,8 @@ public class SwitchboardDispatcher {
      * @param group the group handle
      * @param httpRequest the current HTTP request
      * @param request the request payload; may be null (for example on a GET)
+     * @param <Req> the group's request payload type
+     * @param <Res> the group's response type
      * @return the strategy's response
      * @throws SwitchboardUnresolvedException if no resolver identified a key
      * @throws SwitchboardNotAvailableException if no strategy is available for the key

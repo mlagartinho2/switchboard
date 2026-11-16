@@ -21,11 +21,16 @@ public record SwitchboardProperties(@DefaultValue("true") boolean enabled, Map<S
 
     private static final GroupSettings DEFAULT_GROUP = new GroupSettings(null, null);
 
+    /**
+     * Takes a defensive, unmodifiable copy of {@code groups}; {@code null} becomes empty.
+     */
     public SwitchboardProperties {
         groups = (groups == null) ? Map.of() : Map.copyOf(groups);
     }
 
     /**
+     * Returns the settings for a group.
+     *
      * @param name the group name
      * @return the group's settings, or empty default settings for an unconfigured group; never null
      */
@@ -34,6 +39,8 @@ public record SwitchboardProperties(@DefaultValue("true") boolean enabled, Map<S
     }
 
     /**
+     * Returns whether a use case is enabled in configuration.
+     *
      * @param group the group name
      * @param key the use-case key, compared case-sensitively
      * @return {@code false} only when the case is configured with {@code enabled: false}
@@ -52,6 +59,10 @@ public record SwitchboardProperties(@DefaultValue("true") boolean enabled, Map<S
      */
     public record GroupSettings(List<String> resolutionOrder, Map<String, CaseSettings> cases) {
 
+        /**
+         * Takes defensive, unmodifiable copies; an absent {@code resolutionOrder} stays
+         * {@code null}, and absent {@code cases} become empty.
+         */
         public GroupSettings {
             resolutionOrder = (resolutionOrder == null) ? null : List.copyOf(resolutionOrder);
             cases = (cases == null) ? Map.of() : Map.copyOf(cases);

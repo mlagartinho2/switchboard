@@ -18,6 +18,7 @@ public abstract sealed class SwitchboardDispatchException extends RuntimeExcepti
 
     private static final long serialVersionUID = 1L;
 
+    /** The dispatch group name; part of the serialized form. */
     private final String group;
 
     SwitchboardDispatchException(String group, String message) {
@@ -25,7 +26,11 @@ public abstract sealed class SwitchboardDispatchException extends RuntimeExcepti
         this.group = Objects.requireNonNull(group, "group must not be null");
     }
 
-    /** @return the dispatch group name */
+    /**
+     * Returns the dispatch group name.
+     *
+     * @return the dispatch group name
+     */
     public String group() {
         return group;
     }

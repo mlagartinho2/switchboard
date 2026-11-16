@@ -18,6 +18,7 @@
 
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>
+        <spring-boot.run.skip>false</spring-boot.run.skip>
     </properties>
 
     <dependencies>

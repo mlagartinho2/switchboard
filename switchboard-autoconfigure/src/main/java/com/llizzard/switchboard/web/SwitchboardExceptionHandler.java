@@ -48,7 +48,13 @@ public class SwitchboardExceptionHandler {
     /** Problem type for {@link #ERROR_CODE_NOT_AVAILABLE}. */
     public static final URI TYPE_NOT_AVAILABLE = URI.create("urn:switchboard:error:use-case-not-available");
 
+    /** Creates the handler; registered by Switchboard auto-configuration. */
+    public SwitchboardExceptionHandler() {
+    }
+
     /**
+     * Answers 501 when no resolver identified a use case.
+     *
      * @param ex the failure
      * @param request the current request, used for {@code instance}
      * @return a 501 problem response
@@ -62,6 +68,8 @@ public class SwitchboardExceptionHandler {
     }
 
     /**
+     * Answers 404 when the resolved use case is not registered or is disabled.
+     *
      * @param ex the failure
      * @param request the current request, used for {@code instance}
      * @return a 404 problem response

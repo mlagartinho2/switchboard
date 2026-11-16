@@ -24,10 +24,18 @@ import jakarta.servlet.http.HttpServletRequest;
  */
 public interface SwitchboardResolver<Req> {
 
-    /** @return the single dispatch group this resolver belongs to */
+    /**
+     * Returns the single dispatch group this resolver belongs to.
+     *
+     * @return the single dispatch group this resolver belongs to
+     */
     SwitchboardGroup<Req, ?> group();
 
-    /** @return the resolver name; non-blank and unique within the group */
+    /**
+     * Returns the resolver name; non-blank and unique within the group.
+     *
+     * @return the resolver name; non-blank and unique within the group
+     */
     String name();
 
     /**

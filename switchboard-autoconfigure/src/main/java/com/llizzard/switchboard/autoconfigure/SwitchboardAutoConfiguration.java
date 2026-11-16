@@ -27,6 +27,17 @@ import com.llizzard.switchboard.web.SwitchboardExceptionHandler;
 @EnableConfigurationProperties(SwitchboardProperties.class)
 public class SwitchboardAutoConfiguration {
 
+    /** Creates the auto-configuration; instantiated by Spring Boot. */
+    public SwitchboardAutoConfiguration() {
+    }
+
+    /**
+     * The strategy registry, built from every {@link SwitchboardStrategy} bean.
+     *
+     * @param strategies every strategy bean
+     * @param properties the bound configuration
+     * @return the registry
+     */
     @Bean
     @ConditionalOnMissingBean
     public SwitchboardRegistry switchboardRegistry(ObjectProvider<SwitchboardStrategy<?, ?>> strategies,
@@ -34,6 +45,13 @@ public class SwitchboardAutoConfiguration {
         return new SwitchboardRegistry(strategies.orderedStream().toList(), properties);
     }
 
+    /**
+     * The resolver chain, built from every {@link SwitchboardResolver} bean in bean order.
+     *
+     * @param resolvers every resolver bean
+     * @param properties the bound configuration
+     * @return the chain
+     */
     @Bean
     @ConditionalOnMissingBean
     public SwitchboardResolverChain switchboardResolverChain(ObjectProvider<SwitchboardResolver<?>> resolvers,
@@ -42,12 +60,27 @@ public class SwitchboardAutoConfiguration {
         return new SwitchboardResolverChain(resolvers.orderedStream().toList(), properties);
     }
 
+    /**
+     * The dispatcher that controllers call.
+     *
+     * @param chain the resolver chain
+     * @param registry the strategy registry
+     * @return the dispatcher
+     */
     @Bean
     @ConditionalOnMissingBean
     public SwitchboardDispatcher switchboardDispatcher(SwitchboardResolverChain chain, SwitchboardRegistry registry) {
         return new SwitchboardDispatcher(chain, registry);
     }
 
+    /**
+     * The startup validator (rules V6, V7, V8 and warning W1).
+     *
+     * @param strategies every strategy bean
+     * @param resolvers every resolver bean
+     * @param properties the bound configuration
+     * @return the validator
+     */
     @Bean
     @ConditionalOnMissingBean
     public SwitchboardStartupValidator switchboardStartupValidator(
@@ -57,6 +90,11 @@ public class SwitchboardAutoConfiguration {
                 strategies.orderedStream().toList(), resolvers.orderedStream().toList(), properties);
     }
 
+    /**
+     * The handler that turns dispatch failures into 501 and 404 problem responses.
+     *
+     * @return the exception handler
+     */
     @Bean
     @ConditionalOnMissingBean
     public SwitchboardExceptionHandler switchboardExceptionHandler() {

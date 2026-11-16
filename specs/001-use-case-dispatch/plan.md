@@ -37,7 +37,8 @@ uses `spring-boot-autoconfigure`, `spring-webmvc`, and `jakarta.servlet-api` (pr
 uses Spring Boot actuator autoconfigure (optional) and `spring-boot-configuration-processor`
 (optional, annotation processor). The starter adds `spring-boot-starter-webmvc`. All of these are
 platform components, pre-approved under Principle VII, so **no third-party library is
-introduced**.
+introduced**. The transitive dependencies they bring that fall outside the pre-approved list were
+reviewed and approved by the project owner (§R17).
 
 **Storage**: N/A. All state is built at startup from beans and configuration, and it is immutable.
 
@@ -78,7 +79,7 @@ section). Checked against constitution **v2.0.1** (amended 2026-11-15).*
 | IV | Error handling | 501 for unresolved and 404 for unavailable, via two distinct exception types under one sealed parent. They are never merged. | PASS |
 | V | Code quality (Effective Java) | `requireNonNull` in every constructor. Duplicate keys or resolver names fail at startup, naming both classes. `Map.copyOf` / `List.copyOf` for all stored collections. One scoped `@SuppressWarnings("unchecked")` in `dispatch`. `Optional` only for single values; collections are returned empty, never wrapped. | PASS |
 | VI | Test-driven development | `tasks.md` must place every test task before the implementation task it covers. Bug fixes start from a reproducing test. | PASS (enforced in `/speckit-tasks`) |
-| VII | Third-party dependency discipline | Only the JDK, Spring Boot 4.x platform modules, and BOM-managed test libraries are used. JMH (for SC-008) and AspectJ (for AOP logging) were considered and **not** adopted (§R9, §R12). | PASS |
+| VII | Third-party dependency discipline | Only the JDK, Spring Boot 4.x platform modules, and BOM-managed test libraries are used. JMH (for SC-008) and AspectJ (for AOP logging) were considered and **not** adopted (§R9, §R12). Five transitive dependencies of Spring itself and of `spring-boot-starter-webmvc` were found by the T062 audit and approved (§R17). | PASS |
 | — | Testing standards | Unit tests run without Spring for the registry, chain, dispatcher, handler, and endpoint report. `ApplicationContextRunner` covers activation, back-off, and overrides. The sample app has real strategies and resolvers. | PASS |
 | — | Publishing | `com.llizzard` group, internal Nexus only, version 2.0.0. | PASS. The Nexus URL is still to be provided (§R13). |
 

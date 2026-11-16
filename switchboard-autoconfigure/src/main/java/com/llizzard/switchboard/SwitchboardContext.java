@@ -11,6 +11,11 @@ import java.util.Objects;
  */
 public record SwitchboardContext(String group, String caseKey, String resolverName) {
 
+    /**
+     * Validates the components.
+     *
+     * @throws NullPointerException if any component is null
+     */
     public SwitchboardContext {
         Objects.requireNonNull(group, "group must not be null");
         Objects.requireNonNull(caseKey, "caseKey must not be null");

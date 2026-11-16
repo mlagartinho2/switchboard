@@ -37,6 +37,8 @@ public class SwitchboardEndpoint {
     private final SwitchboardProperties properties;
 
     /**
+     * Creates the endpoint over the given registry, resolver chain, and configuration.
+     *
      * @param registry the strategy registry
      * @param chain the resolver chain
      * @param properties the bound configuration
@@ -49,7 +51,11 @@ public class SwitchboardEndpoint {
         this.properties = Objects.requireNonNull(properties, "properties must not be null");
     }
 
-    /** @return every group with at least one strategy or resolver, sorted by name */
+    /**
+     * Returns every group with at least one strategy or resolver, sorted by name.
+     *
+     * @return every group with at least one strategy or resolver, sorted by name
+     */
     @ReadOperation
     public SwitchboardReport report() {
         Set<String> groups = new TreeSet<>(registry.groups());

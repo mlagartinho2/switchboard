@@ -2,18 +2,19 @@ package com.llizzard.switchboard;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
-import org.springframework.core.io.FileSystemResourceLoader;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.core.type.filter.AssignableTypeFilter;
+import org.springframework.core.type.filter.TypeFilter;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -23,17 +24,33 @@ import org.springframework.web.bind.annotation.RestController;
  */
 class LibraryContentsTest {
 
-    private static final String MAIN_CLASSES = Path.of("target", "classes").toUri().toString();
+    private static final Path MAIN_CLASSES = Path.of("target", "classes").toAbsolutePath();
 
-    private static Set<BeanDefinition> mainClassesMatching(org.springframework.core.type.filter.TypeFilter filter) {
-        ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(false);
-        scanner.setResourcePattern("**/*.class");
-        scanner.setResourceLoader(new PathMatchingResourcePatternResolver(new FileSystemResourceLoader()));
+    /** Candidates from the library package, keeping only main classes (test stubs share the package). */
+    private static List<BeanDefinition> mainClassesMatching(TypeFilter filter) {
+        ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(false) {
+            @Override
+            protected boolean isCandidateComponent(AnnotatedBeanDefinition definition) {
+                return true; // also report interfaces and abstract classes; callers filter
+            }
+        };
         scanner.addIncludeFilter(filter);
-        return scanner.findCandidateComponents(MAIN_CLASSES + "com/llizzard/switchboard");
+        return scanner.findCandidateComponents("com.llizzard.switchboard").stream()
+                .filter(d -> isMainClass((AbstractBeanDefinition) d))
+                .toList();
     }
 
-    private static List<String> concreteClassNames(Set<BeanDefinition> candidates) {
+    private static boolean isMainClass(AbstractBeanDefinition definition) {
+        try {
+            return definition.getResource() != null
+                    && definition.getResource().getFile().toPath().startsWith(MAIN_CLASSES);
+        }
+        catch (IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
+    }
+
+    private static List<String> concreteClassNames(List<BeanDefinition> candidates) {
         return candidates.stream()
                 .map(AnnotatedBeanDefinition.class::cast)
                 .filter(d -> d.getMetadata().isConcrete())
@@ -44,9 +61,14 @@ class LibraryContentsTest {
     @Test
     void scanSeesTheLibraryClasses() {
         // Guards against a vacuous pass: the scan must find the library's own classes.
-        assertThat(concreteClassNames(mainClassesMatching(new AssignableTypeFilter(Object.class))))
+        assertThat(concreteClassNames(mainClassesMatching((reader, factory) -> true)))
                 .contains(SwitchboardDispatcher.class.getName(), SwitchboardRegistry.class.getName())
                 .noneMatch(name -> name.contains("Stubs") || name.endsWith("Test"));
+        // ...and the type filters used below do match: they find the (non-concrete) interfaces themselves.
+        assertThat(mainClassesMatching(new AssignableTypeFilter(SwitchboardStrategy.class)))
+                .extracting(BeanDefinition::getBeanClassName).contains(SwitchboardStrategy.class.getName());
+        assertThat(mainClassesMatching(new AssignableTypeFilter(SwitchboardResolver.class)))
+                .extracting(BeanDefinition::getBeanClassName).contains(SwitchboardResolver.class.getName());
     }
 
     @Test

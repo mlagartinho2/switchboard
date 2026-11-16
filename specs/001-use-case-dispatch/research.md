@@ -271,3 +271,36 @@ unchecked cast; and the module layout.
 - **Rationale**: This meets the spec assumption and FR-009 without forcing a security framework
   onto consumers. `HttpServletRequest.getUserPrincipal()` is available to every resolver through
   the servlet API alone.
+
+## R17 — Transitive dependencies outside the pre-approved platform list
+
+- **Context**: The T062 compliance audit (`mvn dependency:tree` on `switchboard-autoconfigure` and
+  the starter, Spring Boot 4.1.2) found five transitive dependencies outside the list in T062. No
+  build file declares any of them. Each comes through Spring Framework or Spring Boot, and the
+  Spring Boot BOM manages its version.
+- **Decision**: All five are **approved** by the project owner (2026-11-16):
+
+  | Dependency | Version (Boot 4.1.2) | Reaches consumers through | Purpose | License |
+  |---|---|---|---|---|
+  | `commons-logging:commons-logging` | 1.3.6 | `spring-core` (library and starter) | Spring Framework 7's logging facade; Switchboard's dispatch DEBUG line and W1 WARN use it (§R9) | Apache-2.0 |
+  | `org.jspecify:jspecify` | 1.0.1 | `spring-core` (library and starter) | Null-safety annotations only; no runtime behavior | Apache-2.0 |
+  | `org.apache.tomcat.embed:tomcat-embed-core`, `-el`, `-websocket` | 11.0.27 | `spring-boot-starter-webmvc` (starter only) | Embedded servlet container | Apache-2.0 |
+  | `org.yaml:snakeyaml` | 2.6 | `spring-boot-starter-webmvc` (starter only) | Reads `application.yml` | Apache-2.0 |
+  | `org.apache.logging.log4j:log4j-api`, `log4j-to-slf4j` | 2.25.5 | `spring-boot-starter-webmvc` (starter only) | Routes Log4j 2 API calls to SLF4J/Logback | Apache-2.0 |
+
+  `jakarta.annotation-api` (Jakarta) and Jackson 3 (`tools.jackson.core`, plus
+  `com.fasterxml.jackson.core:jackson-annotations`) also appear, and fall within the
+  pre-approved Jakarta and Jackson categories.
+- **Rationale**:
+  - The first two cannot be avoided with Spring Framework 7: `spring-core` depends on them.
+  - The other three are what every Spring MVC application already has. A consumer adding the
+    starter gains nothing it did not already have.
+  - All five are GA releases, actively maintained, Apache-2.0 licensed, and verified with Spring
+    Boot 4.x and Java 17+ by the Spring Boot BOM. Their versions move with Spring Boot upgrades,
+    never independently.
+- **Alternatives considered**: The starter could depend on `switchboard-autoconfigure` alone and
+  leave `spring-boot-starter-webmvc` to the consumer. That drops Tomcat, snakeyaml, and log4j from
+  the starter, but adding the starter would no longer give a working web setup by itself.
+  Rejected.
+- **Re-check**: A Spring Boot upgrade that changes this list (an addition, not a version bump)
+  needs a new Principle VII review.

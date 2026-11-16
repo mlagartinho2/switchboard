@@ -35,6 +35,8 @@ public class SwitchboardRegistry {
     private final SwitchboardProperties properties;
 
     /**
+     * Indexes the strategies by group and key, and validates them.
+     *
      * @param strategies every strategy bean; copied
      * @param properties the bound configuration
      * @throws NullPointerException if an argument is null
@@ -62,7 +64,8 @@ public class SwitchboardRegistry {
         }
     }
 
-    private static Map<String, Map<String, SwitchboardStrategy<?, ?>>> index(List<SwitchboardStrategy<?, ?>> strategies) {
+    private static Map<String, Map<String, SwitchboardStrategy<?, ?>>> index(
+            List<SwitchboardStrategy<?, ?>> strategies) {
         Map<String, List<SwitchboardStrategy<?, ?>>> byGroup = strategies.stream()
                 .collect(Collectors.groupingBy(s -> s.group().name()));
         Map<String, Map<String, SwitchboardStrategy<?, ?>>> index = new HashMap<>();
@@ -75,6 +78,8 @@ public class SwitchboardRegistry {
     }
 
     /**
+     * Looks up the strategy that handles a key in a group, skipping disabled cases.
+     *
      * @param group the group name
      * @param caseKey the use-case key, matched exactly (case-sensitive, not trimmed)
      * @return the strategy registered for that key in that group, or empty when there is none or
@@ -88,6 +93,8 @@ public class SwitchboardRegistry {
     }
 
     /**
+     * Returns every strategy registered in a group, including disabled ones.
+     *
      * @param group the group name
      * @return every strategy registered in the group, by key, including disabled ones; empty for
      *         an unknown group
@@ -97,6 +104,8 @@ public class SwitchboardRegistry {
     }
 
     /**
+     * Returns whether a case is enabled in configuration.
+     *
      * @param group the group name
      * @param caseKey the use-case key, matched exactly
      * @return {@code false} only when the case is configured with {@code enabled: false}; an
@@ -106,12 +115,20 @@ public class SwitchboardRegistry {
         return properties.isEnabled(group, caseKey);
     }
 
-    /** @return the names of the groups that have at least one strategy */
+    /**
+     * Returns the names of the groups that have at least one strategy.
+     *
+     * @return the names of the groups that have at least one strategy
+     */
     public Set<String> groups() {
         return strategiesByGroup.keySet();
     }
 
-    /** @return the configuration this registry was built with */
+    /**
+     * Returns the configuration this registry was built with.
+     *
+     * @return the configuration this registry was built with
+     */
     protected SwitchboardProperties properties() {
         return properties;
     }

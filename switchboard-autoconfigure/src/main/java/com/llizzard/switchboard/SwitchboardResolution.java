@@ -11,6 +11,11 @@ import java.util.Objects;
  */
 public record SwitchboardResolution(String caseKey, String resolverName) {
 
+    /**
+     * Validates the components.
+     *
+     * @throws NullPointerException if any component is null
+     */
     public SwitchboardResolution {
         Objects.requireNonNull(caseKey, "caseKey must not be null");
         Objects.requireNonNull(resolverName, "resolverName must not be null");

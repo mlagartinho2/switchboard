@@ -23,6 +23,18 @@ import com.llizzard.switchboard.actuate.SwitchboardEndpoint;
 @ConditionalOnBean(SwitchboardRegistry.class)
 public class SwitchboardEndpointAutoConfiguration {
 
+    /** Creates the auto-configuration; instantiated by Spring Boot. */
+    public SwitchboardEndpointAutoConfiguration() {
+    }
+
+    /**
+     * The {@code switchboard} actuator endpoint.
+     *
+     * @param registry the strategy registry
+     * @param chain the resolver chain
+     * @param properties the bound configuration
+     * @return the endpoint
+     */
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnAvailableEndpoint
