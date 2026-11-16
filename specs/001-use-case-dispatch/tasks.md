@@ -424,7 +424,7 @@ even when the consumer has its own catch-all exception handler (quickstart scena
 
 ### Tests for User Story 2 (write first, confirm they fail)
 
-- [ ] T035 [P] [US2] Write `AT/web/SwitchboardExceptionHandlerTest.java` (plain JUnit, calling
+- [X] T035 [P] [US2] Write `AT/web/SwitchboardExceptionHandlerTest.java` (plain JUnit, calling
   the handler methods directly with a `MockHttpServletRequest` whose URI is `/api/refunds`). It
   asserts every field in [contracts/http-errors.md](contracts/http-errors.md):
   - **Unresolved**: status 501; `type` = `urn:switchboard:error:use-case-unresolved`; `title`
@@ -434,7 +434,7 @@ even when the consumer has its own catch-all exception handler (quickstart scena
     `title` "Use case not available"; `errorCode` = `USE_CASE_NOT_AVAILABLE`; `group` and `key`
     properties set.
   - Neither `detail` contains payload data.
-- [ ] T036 [P] [US2] Write `ST/SampleFailureResponsesTest.java` (MockMvc). It checks:
+- [X] T036 [P] [US2] Write `ST/SampleFailureResponsesTest.java` (MockMvc). It checks:
   - `POST /api/refunds` with no header and `{"amount":50}` returns 501, `Content-Type
     application/problem+json`, JSON `errorCode` `USE_CASE_UNRESOLVED`, and `group` `refunds`.
   - Header `X-Refund-Type: NOPE` returns 404 with `errorCode` `USE_CASE_NOT_AVAILABLE` and
@@ -449,13 +449,13 @@ even when the consumer has its own catch-all exception handler (quickstart scena
     header `X-Explode: true`, and returns empty otherwise. A request with that header gets 500
     from the test-only catch-all advice, never 501 or 404. A request without the header is still
     dispatched normally.
-- [ ] T037 [P] [US2] Extend `AT/autoconfigure/SwitchboardAutoConfigurationTest.java`: in the
+- [X] T037 [P] [US2] Extend `AT/autoconfigure/SwitchboardAutoConfigurationTest.java`: in the
   activated servlet context from T020, assert there is exactly one `SwitchboardExceptionHandler`
   bean. It must fail until T038.
 
 ### Implementation for User Story 2
 
-- [ ] T038 [US2] Implement and register `AC/web/SwitchboardExceptionHandler.java`:
+- [X] T038 [US2] Implement and register `AC/web/SwitchboardExceptionHandler.java`:
   - `@RestControllerAdvice` with `@Order(Ordered.HIGHEST_PRECEDENCE)`.
   - Two `@ExceptionHandler` methods, for `SwitchboardUnresolvedException` and
     `SwitchboardNotAvailableException`. Each returns `ResponseEntity<ProblemDetail>`, built with

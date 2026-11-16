@@ -14,6 +14,7 @@ import com.llizzard.switchboard.SwitchboardRegistry;
 import com.llizzard.switchboard.SwitchboardResolver;
 import com.llizzard.switchboard.SwitchboardResolverChain;
 import com.llizzard.switchboard.SwitchboardStrategy;
+import com.llizzard.switchboard.web.SwitchboardExceptionHandler;
 
 /**
  * Wires Switchboard into a servlet web application. Every bean backs off when the application
@@ -54,5 +55,11 @@ public class SwitchboardAutoConfiguration {
             SwitchboardProperties properties) {
         return new SwitchboardStartupValidator(
                 strategies.orderedStream().toList(), resolvers.orderedStream().toList(), properties);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public SwitchboardExceptionHandler switchboardExceptionHandler() {
+        return new SwitchboardExceptionHandler();
     }
 }

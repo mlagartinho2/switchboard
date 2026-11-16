@@ -22,13 +22,9 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MockMvcTester.MockMvcRequestBuilder;
-import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
-import com.llizzard.switchboard.SwitchboardDispatchException;
 import com.llizzard.switchboard.SwitchboardGroup;
-import com.llizzard.switchboard.SwitchboardNotAvailableException;
 import com.llizzard.switchboard.SwitchboardResolver;
-import com.llizzard.switchboard.SwitchboardUnresolvedException;
 import com.llizzard.switchboard.sample.payments.CardPaymentStrategy;
 import com.llizzard.switchboard.sample.refunds.RefundGroup;
 import com.llizzard.switchboard.sample.refunds.RefundRequest;
@@ -51,17 +47,19 @@ class SampleDispatchTest {
         return refundType == null ? request : request.header("X-Refund-Type", refundType);
     }
 
-    /**
-     * The request was rejected by the dispatcher with the given exception.
-     *
-     * <p>TODO(T038): once {@code SwitchboardExceptionHandler} exists (Phase 4), these rejections
-     * become 404 / 501 problem responses. Replace this helper with status assertions then:
-     * {@link SwitchboardNotAvailableException} → 404, {@link SwitchboardUnresolvedException} → 501.
-     */
-    static void assertRejectedWith(MvcTestResult result, Class<? extends SwitchboardDispatchException> type) {
-        assertThat(result).hasFailed();
-        // MockMvc wraps unhandled exceptions in a ServletException ("Request processing failed").
-        assertThat(result.getUnresolvedException()).cause().isInstanceOf(type);
+    static void assertNotAvailable(MockMvcRequestBuilder request, String key) {
+        assertThat(request)
+                .hasStatus(HttpStatus.NOT_FOUND)
+                .bodyJson()
+                .hasPathSatisfying("$.errorCode", v -> v.assertThat().isEqualTo("USE_CASE_NOT_AVAILABLE"))
+                .hasPathSatisfying("$.key", v -> v.assertThat().isEqualTo(key));
+    }
+
+    static void assertUnresolved(MockMvcRequestBuilder request) {
+        assertThat(request)
+                .hasStatus(HttpStatus.NOT_IMPLEMENTED)
+                .bodyJson()
+                .hasPathSatisfying("$.errorCode", v -> v.assertThat().isEqualTo("USE_CASE_UNRESOLVED"));
     }
 
     @Test
@@ -92,7 +90,7 @@ class SampleDispatchTest {
 
     @Test
     void keyFromAnotherGroupIsNotAvailableAndNeverRunsThere() {
-        assertRejectedWith(refund(mvc, "CARD", "{\"amount\":50}").exchange(), SwitchboardNotAvailableException.class);
+        assertNotAvailable(refund(mvc, "CARD", "{\"amount\":50}"), "CARD");
 
         verify(cardPaymentStrategy, never()).execute(any(), any());
     }
@@ -143,13 +141,12 @@ class SampleDispatchTest {
 
         @Test
         void regularCallerFallsThroughToUnresolved() {
-            assertRejectedWith(refund(mvc, null, "{\"amount\":50}").principal(principal("regular-client")).exchange(),
-                    SwitchboardUnresolvedException.class);
+            assertUnresolved(refund(mvc, null, "{\"amount\":50}").principal(principal("regular-client")));
         }
 
         @Test
         void anonymousCallerFallsThroughToUnresolved() {
-            assertRejectedWith(refund(mvc, null, "{\"amount\":50}").exchange(), SwitchboardUnresolvedException.class);
+            assertUnresolved(refund(mvc, null, "{\"amount\":50}"));
         }
 
         private static Principal principal(String name) {

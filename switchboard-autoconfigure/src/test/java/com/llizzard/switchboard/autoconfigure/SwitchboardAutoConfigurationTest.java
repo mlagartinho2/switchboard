@@ -18,6 +18,7 @@ import com.llizzard.switchboard.Stubs.StubStrategy;
 import com.llizzard.switchboard.SwitchboardDispatcher;
 import com.llizzard.switchboard.SwitchboardRegistry;
 import com.llizzard.switchboard.SwitchboardResolverChain;
+import com.llizzard.switchboard.web.SwitchboardExceptionHandler;
 
 class SwitchboardAutoConfigurationTest {
 
@@ -36,6 +37,7 @@ class SwitchboardAutoConfigurationTest {
                     assertThat(context).hasSingleBean(SwitchboardDispatcher.class);
                     assertThat(context).hasSingleBean(SwitchboardStartupValidator.class);
                     assertThat(context).hasSingleBean(SwitchboardProperties.class);
+                    assertThat(context).hasSingleBean(SwitchboardExceptionHandler.class);
                     assertThat(context.getBean(SwitchboardRegistry.class).find("refunds", "STANDARD")).isPresent();
                     assertThat(context.getBean(SwitchboardResolverChain.class).resolutionOrder("refunds"))
                             .containsExactly("h");
@@ -55,6 +57,7 @@ class SwitchboardAutoConfigurationTest {
                     assertThat(context).doesNotHaveBean(SwitchboardDispatcher.class);
                     assertThat(context).doesNotHaveBean(SwitchboardStartupValidator.class);
                     assertThat(context).doesNotHaveBean(SwitchboardProperties.class);
+                    assertThat(context).doesNotHaveBean(SwitchboardExceptionHandler.class);
                 });
     }
 
