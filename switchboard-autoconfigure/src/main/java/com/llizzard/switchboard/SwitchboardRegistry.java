@@ -15,6 +15,9 @@ import com.llizzard.switchboard.autoconfigure.SwitchboardProperties;
  * Holds every registered {@link SwitchboardStrategy}, indexed by group name and use-case key.
  * Built once at startup and immutable afterwards.
  *
+ * <p>A case configured with {@code switchboard.groups.<group>.cases.[<key>].enabled=false} stays
+ * registered but is not returned by {@link #find}, so dispatch answers 404 for it.
+ *
  * <p>The constructor validates, and fails with {@link IllegalStateException}, when:
  * <ul>
  *   <li>two strategies in one group share a key (V1; the message names both classes);</li>
@@ -74,18 +77,33 @@ public class SwitchboardRegistry {
     /**
      * @param group the group name
      * @param caseKey the use-case key, matched exactly (case-sensitive, not trimmed)
-     * @return the strategy registered for that key in that group, or empty
+     * @return the strategy registered for that key in that group, or empty when there is none or
+     *         the case is disabled in configuration (FR-014)
      */
     public Optional<SwitchboardStrategy<?, ?>> find(String group, String caseKey) {
+        if (!isEnabled(group, caseKey)) {
+            return Optional.empty();
+        }
         return Optional.ofNullable(registered(group).get(caseKey));
     }
 
     /**
      * @param group the group name
-     * @return every strategy registered in the group, by key; empty for an unknown group
+     * @return every strategy registered in the group, by key, including disabled ones; empty for
+     *         an unknown group
      */
     public Map<String, SwitchboardStrategy<?, ?>> registered(String group) {
         return strategiesByGroup.getOrDefault(group, Map.of());
+    }
+
+    /**
+     * @param group the group name
+     * @param caseKey the use-case key, matched exactly
+     * @return {@code false} only when the case is configured with {@code enabled: false}; an
+     *         unconfigured case is enabled (FR-016)
+     */
+    public boolean isEnabled(String group, String caseKey) {
+        return properties.isEnabled(group, caseKey);
     }
 
     /** @return the names of the groups that have at least one strategy */

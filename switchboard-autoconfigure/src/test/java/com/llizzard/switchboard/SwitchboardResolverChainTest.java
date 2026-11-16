@@ -12,6 +12,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -21,6 +22,7 @@ import com.llizzard.switchboard.Stubs.Req;
 import com.llizzard.switchboard.Stubs.Res;
 import com.llizzard.switchboard.Stubs.StubResolver;
 import com.llizzard.switchboard.autoconfigure.SwitchboardProperties;
+import com.llizzard.switchboard.autoconfigure.SwitchboardProperties.GroupSettings;
 
 class SwitchboardResolverChainTest {
 
@@ -230,5 +232,103 @@ class SwitchboardResolverChainTest {
         assertThatNullPointerException()
                 .isThrownBy(() -> chain.resolve(REFUNDS, null, payload))
                 .withMessageContaining("httpRequest");
+    }
+
+    // --- US3: configured resolution-order (FR-019, V4, V5) ---
+
+    private static SwitchboardProperties order(String group, List<String> resolutionOrder) {
+        return new SwitchboardProperties(true, Map.of(group, new GroupSettings(resolutionOrder, null)));
+    }
+
+    @Test
+    void configuredOrderOverridesTheGivenOrder() {
+        StubResolver<Req> a = resolver(REFUNDS, "a", "STANDARD");
+        StubResolver<Req> b = resolver(REFUNDS, "b", "EXPEDITED");
+        SwitchboardResolverChain chain =
+                new SwitchboardResolverChain(List.of(a, b), order("refunds", List.of("b", "a")));
+
+        assertThat(chain.resolve(REFUNDS, http, payload)).contains(new SwitchboardResolution("EXPEDITED", "b"));
+        assertThat(a.calls).hasValue(0);
+    }
+
+    @Test
+    void configuredOrderConsultsOnlyTheNamedResolvers() {
+        StubResolver<Req> a = resolver(REFUNDS, "a", null);
+        StubResolver<Req> b = resolver(REFUNDS, "b", "EXPEDITED");
+        SwitchboardResolverChain chain = new SwitchboardResolverChain(List.of(a, b), order("refunds", List.of("a")));
+
+        assertThat(chain.resolve(REFUNDS, http, payload)).isEmpty();
+        assertThat(a.calls).hasValue(1);
+        assertThat(b.calls).hasValue(0);
+    }
+
+    @Test
+    void v4UnknownNameInConfiguredOrderFailsNamingGroupAndName() {
+        List<SwitchboardResolver<?>> resolvers = List.of(resolver(REFUNDS, "a", null));
+
+        assertThatIllegalStateException()
+                .isThrownBy(() -> new SwitchboardResolverChain(resolvers, order("refunds", List.of("a", "zzz"))))
+                .withMessageContaining("'refunds'")
+                .withMessageContaining("'zzz'")
+                .withMessageContaining("[a]");
+    }
+
+    @Test
+    void v4NameOfAResolverInAnotherGroupIsUnknown() {
+        List<SwitchboardResolver<?>> resolvers = List.of(resolver(REFUNDS, "a", null), resolver(PAYMENTS, "p", null));
+
+        assertThatIllegalStateException()
+                .isThrownBy(() -> new SwitchboardResolverChain(resolvers, order("refunds", List.of("p"))))
+                .withMessageContaining("'refunds'")
+                .withMessageContaining("'p'");
+    }
+
+    @Test
+    void v4ConfiguredOrderForAGroupWithoutResolversFails() {
+        List<SwitchboardResolver<?>> resolvers = List.of(resolver(REFUNDS, "a", null));
+
+        assertThatIllegalStateException()
+                .isThrownBy(() -> new SwitchboardResolverChain(resolvers, order("ghost", List.of("g"))))
+                .withMessageContaining("'ghost'")
+                .withMessageContaining("'g'");
+    }
+
+    @Test
+    void v5EmptyConfiguredOrderFailsNamingTheGroup() {
+        List<SwitchboardResolver<?>> resolvers = List.of(resolver(REFUNDS, "a", null));
+
+        assertThatIllegalStateException()
+                .isThrownBy(() -> new SwitchboardResolverChain(resolvers, order("refunds", List.of())))
+                .withMessageContaining("'refunds'")
+                .withMessageContaining("empty");
+    }
+
+    @Test
+    void absentConfiguredOrderFallsBackToTheGivenOrder() {
+        SwitchboardResolverChain chain = new SwitchboardResolverChain(
+                List.of(resolver(REFUNDS, "a", null), resolver(REFUNDS, "b", "STANDARD")), order("refunds", null));
+
+        assertThat(chain.resolutionOrder("refunds")).containsExactly("a", "b");
+        assertThat(chain.resolve(REFUNDS, http, payload)).contains(new SwitchboardResolution("STANDARD", "b"));
+    }
+
+    @Test
+    void resolutionOrderReportsTheConfiguredOrder() {
+        SwitchboardResolverChain chain = new SwitchboardResolverChain(
+                List.of(resolver(REFUNDS, "a", null), resolver(REFUNDS, "b", null), resolver(REFUNDS, "c", null)),
+                order("refunds", List.of("c", "a")));
+
+        assertThat(chain.resolutionOrder("refunds")).containsExactly("c", "a");
+    }
+
+    @Test
+    void configuredOrderInOneGroupDoesNotAffectAnother() {
+        SwitchboardResolverChain chain = new SwitchboardResolverChain(
+                List.of(resolver(REFUNDS, "a", null), resolver(REFUNDS, "b", null),
+                        resolver(PAYMENTS, "x", null), resolver(PAYMENTS, "y", null)),
+                order("refunds", List.of("b")));
+
+        assertThat(chain.resolutionOrder("refunds")).containsExactly("b");
+        assertThat(chain.resolutionOrder("payments")).containsExactly("x", "y");
     }
 }

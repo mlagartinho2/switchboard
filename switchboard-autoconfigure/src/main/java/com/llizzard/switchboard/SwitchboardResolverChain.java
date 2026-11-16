@@ -1,5 +1,6 @@
 package com.llizzard.switchboard;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -7,6 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,11 +20,15 @@ import com.llizzard.switchboard.autoconfigure.SwitchboardProperties;
  * one of them produces. Built once at startup and immutable afterwards.
  *
  * <p>Without a configured {@code resolution-order}, a group's resolvers are consulted in the
- * order they were given, which is Spring bean order ({@code @Order}) when auto-configured.
+ * order they were given, which is Spring bean order ({@code @Order}) when auto-configured. With
+ * {@code switchboard.groups.<group>.resolution-order}, exactly the named resolvers are consulted,
+ * in the configured order; resolvers left out are never consulted.
  *
  * <p>The constructor validates, and fails with {@link IllegalStateException}, when:
  * <ul>
  *   <li>two resolvers in one group share a name, or a name is blank (V3);</li>
+ *   <li>a configured {@code resolution-order} names a resolver that is not in its group (V4);</li>
+ *   <li>a configured {@code resolution-order} is present but empty (V5);</li>
  *   <li>resolvers use the same group name with different request/response types (V8).</li>
  * </ul>
  *
@@ -38,7 +44,7 @@ public class SwitchboardResolverChain {
      * @param orderedResolvers every resolver bean, in consultation order; copied
      * @param properties the bound configuration
      * @throws NullPointerException if an argument is null
-     * @throws IllegalStateException if a rule V3 or V8 is violated
+     * @throws IllegalStateException if a rule V3, V4, V5, or V8 is violated
      */
     public SwitchboardResolverChain(List<SwitchboardResolver<?>> orderedResolvers, SwitchboardProperties properties) {
         Objects.requireNonNull(orderedResolvers, "orderedResolvers must not be null");
@@ -52,7 +58,13 @@ public class SwitchboardResolverChain {
         Map<String, List<SwitchboardResolver<?>>> index = new HashMap<>();
         byGroup.forEach((group, members) -> {
             validateNames(group, members);
-            index.put(group, List.copyOf(members));
+            index.put(group, ordered(group, members, properties.group(group).resolutionOrder()));
+        });
+        // An order configured for a group with no resolvers at all can only name unknown resolvers (V4/V5).
+        new TreeMap<>(properties.groups()).forEach((group, settings) -> {
+            if (!byGroup.containsKey(group)) {
+                ordered(group, List.of(), settings.resolutionOrder());
+            }
         });
         this.resolversByGroup = Map.copyOf(index);
     }
@@ -62,6 +74,35 @@ public class SwitchboardResolverChain {
             throw new IllegalStateException(
                     "Switchboard resolver " + resolver.getClass().getName() + " returned a null group()");
         }
+    }
+
+    /**
+     * @param members the group's resolvers, in the given order; names already validated (V3)
+     * @param configuredOrder the configured {@code resolution-order}, or null when absent
+     * @return the resolvers to consult, in order
+     */
+    private static List<SwitchboardResolver<?>> ordered(String group, List<SwitchboardResolver<?>> members,
+            List<String> configuredOrder) {
+        if (configuredOrder == null) {
+            return List.copyOf(members);
+        }
+        if (configuredOrder.isEmpty()) {
+            throw new IllegalStateException("Switchboard group '" + group + "' has an empty resolution-order:"
+                    + " name at least one resolver, or remove the setting to consult every resolver in bean order.");
+        }
+        Map<String, SwitchboardResolver<?>> byName = members.stream()
+                .collect(Collectors.toMap(SwitchboardResolver::name, r -> r));
+        List<SwitchboardResolver<?>> ordered = new ArrayList<>(configuredOrder.size());
+        for (String name : configuredOrder) {
+            SwitchboardResolver<?> resolver = byName.get(name);
+            if (resolver == null) {
+                throw new IllegalStateException("Switchboard group '" + group + "' resolution-order names unknown"
+                        + " resolver '" + name + "'; resolvers in this group: "
+                        + members.stream().map(SwitchboardResolver::name).toList());
+            }
+            ordered.add(resolver);
+        }
+        return List.copyOf(ordered);
     }
 
     private static void validateNames(String group, List<SwitchboardResolver<?>> resolvers) {

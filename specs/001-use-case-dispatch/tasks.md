@@ -484,39 +484,39 @@ starts with no Switchboard beans (quickstart §4).
 
 ### Tests for User Story 3 (write first, confirm they fail)
 
-- [ ] T039 [P] [US3] Extend `AT/SwitchboardRegistryTest.java`:
+- [X] T039 [P] [US3] Extend `AT/SwitchboardRegistryTest.java`:
   - With properties `refunds.cases.[EXPEDITED].enabled=false` (built directly as
     `SwitchboardProperties`), `find("refunds","EXPEDITED")` is empty, but
     `registered("refunds")` still contains `EXPEDITED` and `isEnabled("refunds","EXPEDITED")`
     is `false` (FR-014, FR-015).
   - `isEnabled` defaults to `true` with no setting (FR-016).
   - Disabling `STANDARD` in `refunds` leaves `STANDARD` in `payments` enabled (FR-034).
-- [ ] T040 [P] [US3] Extend `AT/SwitchboardResolverChainTest.java`:
+- [X] T040 [P] [US3] Extend `AT/SwitchboardResolverChainTest.java`:
   - A configured `resolution-order: [b, a]` consults `b` before `a`, regardless of list order.
   - A configured `[a]` never consults `b`.
   - **V4**: an order naming `zzz` throws, naming the group and `zzz`.
   - **V5**: an explicit empty order (`List.of()`) throws, naming the group.
   - An absent order (`null`) falls back to the given order.
   - `resolutionOrder(group)` returns the configured order when present.
-- [ ] T041 [P] [US3] Extend `AT/autoconfigure/SwitchboardStartupValidationTest.java`:
+- [X] T041 [P] [US3] Extend `AT/autoconfigure/SwitchboardStartupValidationTest.java`:
   - **V7**: `switchboard.groups.ghost.cases.[X].enabled=true` with no strategy or resolver in
     `ghost` fails startup, naming `ghost`.
   - **W1**: `switchboard.groups.refunds.cases.[REFUNDSTANDARD].owner=x` with no matching
     strategy starts successfully and logs a WARN naming the group and the key (use
     `OutputCaptureExtension`).
   - **V4** through the full context: an unknown name in `resolution-order` fails startup.
-- [ ] T042 [P] [US3] Extend `AT/autoconfigure/SwitchboardStartupValidatorTest.java` (plain
+- [X] T042 [P] [US3] Extend `AT/autoconfigure/SwitchboardStartupValidatorTest.java` (plain
   JUnit, no Spring context). It checks:
   - **V7**: properties that configure group `ghost` (with a case entry) while no strategy or
     resolver uses `ghost` make `afterSingletonsInstantiated()` throw, naming `ghost`.
   - **W1**: properties that configure case `REFUNDSTANDARD` in group `refunds`, which has no
     such strategy, do not throw. Instead they log one WARN naming the group and the key and
     mentioning the bracket notation (use `OutputCaptureExtension`).
-- [ ] T043 [P] [US3] Extend `AT/autoconfigure/SwitchboardAutoConfigurationTest.java`: with
+- [X] T043 [P] [US3] Extend `AT/autoconfigure/SwitchboardAutoConfigurationTest.java`: with
   `switchboard.enabled=false`, the context starts and contains **no** `SwitchboardRegistry`,
   `SwitchboardResolverChain`, `SwitchboardDispatcher`, `SwitchboardStartupValidator`, or
   `SwitchboardExceptionHandler` (FR-017).
-- [ ] T044 [P] [US3] Write `ST/SampleConfigurationTest.java`, using nested
+- [X] T044 [P] [US3] Write `ST/SampleConfigurationTest.java`, using nested
   `@SpringBootTest(properties = ...)` classes:
   - (a) `switchboard.groups.refunds.cases.[EXPEDITED].enabled=false`: no header with
     `{"amount":5000}` returns 404, header `STANDARD` returns 200, and `POST /api/payments` with
@@ -532,17 +532,17 @@ starts with no Switchboard beans (quickstart §4).
 
 ### Implementation for User Story 3
 
-- [ ] T045 [US3] Apply enablement in `AC/SwitchboardRegistry.java`: `find` returns only strategies
+- [X] T045 [US3] Apply enablement in `AC/SwitchboardRegistry.java`: `find` returns only strategies
   where `properties.isEnabled(group, key)` is true. Add `isEnabled(group, key)`. Make T039 pass.
-- [ ] T046 [US3] Apply the configured order in `AC/SwitchboardResolverChain.java`: when
+- [X] T046 [US3] Apply the configured order in `AC/SwitchboardResolverChain.java`: when
   `properties.group(g).resolutionOrder()` is non-null, build the group's chain from exactly
   those names in that order. Throw **V4** for an unknown name and **V5** for an empty list.
   Make T040 pass.
-- [ ] T047 [US3] Extend `AC/autoconfigure/SwitchboardStartupValidator.java`: throw for **V7**
+- [X] T047 [US3] Extend `AC/autoconfigure/SwitchboardStartupValidator.java`: throw for **V7**
   (a configured group name with no strategies and no resolvers), and log the **W1** WARN via
   SLF4J for each configured case key that has no strategy in its group. The WARN message must
   mention the bracket notation (§R5). Make T041 and T042 pass.
-- [ ] T048 [US3] Make the sample controllers back off with the library:
+- [X] T048 [US3] Make the sample controllers back off with the library:
   - Annotate `SM/refunds/RefundController.java` and `SM/payments/PaymentController.java` with
     `@ConditionalOnProperty(prefix = "switchboard", name = "enabled", havingValue = "true",
     matchIfMissing = true)`, following the consumer pattern in §R11.

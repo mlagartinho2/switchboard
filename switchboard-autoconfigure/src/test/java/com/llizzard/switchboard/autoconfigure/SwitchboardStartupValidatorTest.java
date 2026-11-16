@@ -5,21 +5,29 @@ import static com.llizzard.switchboard.Stubs.REFUNDS;
 import static com.llizzard.switchboard.Stubs.REFUNDS_OTHER_TYPES;
 import static com.llizzard.switchboard.Stubs.resolver;
 import static com.llizzard.switchboard.Stubs.strategy;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 
 import com.llizzard.switchboard.Stubs.Res;
 import com.llizzard.switchboard.Stubs.StubResolver;
 import com.llizzard.switchboard.Stubs.StubStrategy;
 import com.llizzard.switchboard.SwitchboardResolver;
 import com.llizzard.switchboard.SwitchboardStrategy;
+import com.llizzard.switchboard.autoconfigure.SwitchboardProperties.CaseSettings;
+import com.llizzard.switchboard.autoconfigure.SwitchboardProperties.GroupSettings;
 
 /** Plain JUnit, no Spring context (constitution, Testing section). */
 class SwitchboardStartupValidatorTest {
@@ -117,5 +125,79 @@ class SwitchboardStartupValidatorTest {
 
         lateResolvers.add(resolver(PAYMENTS, "p", null)); // would fix V6 if seen
         assertThatIllegalStateException().isThrownBy(invalid::afterSingletonsInstantiated);
+    }
+
+    // --- US3: configuration checks (V7, W1) ---
+
+    private static SwitchboardProperties cases(String group, String... keys) {
+        Map<String, CaseSettings> cases = new LinkedHashMap<>();
+        for (String key : keys) {
+            cases.put(key, new CaseSettings(true, "x", null, null));
+        }
+        return new SwitchboardProperties(true, Map.of(group, new GroupSettings(null, cases)));
+    }
+
+    @Test
+    void v7ConfiguredGroupWithNoStrategiesOrResolversFailsNamingTheGroup() {
+        SwitchboardStartupValidator validator = new SwitchboardStartupValidator(
+                List.of(strategy(REFUNDS, "STANDARD")), List.of(resolver(REFUNDS, "h", null)), cases("ghost", "X"));
+
+        assertThatIllegalStateException()
+                .isThrownBy(validator::afterSingletonsInstantiated)
+                .withMessageContaining("'ghost'");
+    }
+
+    @Test
+    void v7ConfiguredGroupUsedOnlyByAResolverIsAccepted() {
+        SwitchboardStartupValidator validator = new SwitchboardStartupValidator(
+                List.of(), List.of(resolver(REFUNDS, "h", null)), new SwitchboardProperties(true,
+                        Map.of("refunds", new GroupSettings(List.of("h"), null))));
+
+        assertThatCode(validator::afterSingletonsInstantiated).doesNotThrowAnyException();
+    }
+
+    @Test
+    @ExtendWith(OutputCaptureExtension.class)
+    void w1ConfiguredCaseWithoutStrategyOnlyWarns(CapturedOutput output) {
+        SwitchboardStartupValidator validator = new SwitchboardStartupValidator(
+                List.of(strategy(REFUNDS, "REFUND_STANDARD")), List.of(resolver(REFUNDS, "h", null)),
+                cases("refunds", "REFUNDSTANDARD"));
+
+        assertThatCode(validator::afterSingletonsInstantiated).doesNotThrowAnyException();
+
+        List<String> warnings = output.getAll().lines().filter(line -> line.contains("WARN")).toList();
+        assertThat(warnings).hasSize(1);
+        assertThat(warnings.get(0))
+                .contains("'refunds'")
+                .contains("'REFUNDSTANDARD'")
+                .contains("REFUND_STANDARD")
+                .containsIgnoringCase("bracket");
+    }
+
+    @Test
+    @ExtendWith(OutputCaptureExtension.class)
+    void w1ConfiguredCaseWithMatchingStrategyDoesNotWarn(CapturedOutput output) {
+        SwitchboardStartupValidator validator = new SwitchboardStartupValidator(
+                List.of(strategy(REFUNDS, "STANDARD")), List.of(resolver(REFUNDS, "h", null)),
+                cases("refunds", "STANDARD"));
+
+        validator.afterSingletonsInstantiated();
+
+        assertThat(output.getAll()).doesNotContain("WARN");
+    }
+
+    @Test
+    @ExtendWith(OutputCaptureExtension.class)
+    void w1WarnsOncePerUnmatchedKey(CapturedOutput output) {
+        SwitchboardStartupValidator validator = new SwitchboardStartupValidator(
+                List.of(strategy(REFUNDS, "STANDARD")), List.of(resolver(REFUNDS, "h", null)),
+                cases("refunds", "STANDARD", "GONE", "ALSOGONE"));
+
+        validator.afterSingletonsInstantiated();
+
+        List<String> warnings = output.getAll().lines().filter(line -> line.contains("WARN")).toList();
+        assertThat(warnings).hasSize(2);
+        assertThat(warnings).anySatisfy(line -> assertThat(line).contains("'GONE'"));
+        assertThat(warnings).anySatisfy(line -> assertThat(line).contains("'ALSOGONE'"));
     }
 }
